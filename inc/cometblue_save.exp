@@ -1,0 +1,75 @@
+#!/usr/bin/expect -f
+
+# author: Torsten Tronkner # version: 0.1 # license: GPLv3
+
+log_user 0
+
+set bluetooth_address [lindex $argv 0]
+set PIN [lindex $argv 1]
+
+set fp [open [lindex $argv 2] r]
+
+# wait some seconds for a response
+set timeout 60
+
+set counter 0
+
+while {1} {
+  # start gatttool
+  spawn -noecho btgatt-client -d $bluetooth_address
+
+  expect {
+  	"Connecting to device..." {}
+	eof  { exit 2 }
+  }
+
+  expect { 
+    " Done" { break }
+    " Failed to connect: Device or resource busy" {
+	exit 2
+    }
+    " Failed to connect: Transport endpoint is not connected" {
+      puts "Not connected"
+      incr counter
+      if {$counter > 3} {
+        puts "Giving up"
+        exit 2
+      }
+      sleep 15
+     }
+     timeout {
+	     puts "Timeout"
+	      incr counter
+	      if {$counter > 3} {
+	        puts "Giving up"
+	        exit 2
+	      }
+	      sleep 15
+    }
+  }
+}
+
+expect "47e9ee30-47e9-11e4-8939-164230d1df67" 
+
+# set a shorter timeout now
+set timeout 5
+
+send "write-long-value 0x0048 0 0 0 0\n"
+expect {
+  "Write successful" {
+    puts "The PIN was accepted."
+  }
+  timeout { exit 2 }
+}
+
+
+foreach handle [list 0x001b 0x001d 0x001f 0x0021 0x0023 0x0025 0x0027 0x0029 0x002b 0x002d 0x002f 0x0031 0x0033 0x0035 0x0037 0x0039 0x003b 0x003d] {
+
+  send "write-value $handle [gets $fp]\n"
+  expect {
+  	"Write successful" { }
+  	timeout { exit 2 }
+  }
+}
+
+close $fp

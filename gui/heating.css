@@ -1,0 +1,149 @@
+.pokoje>input {
+	margin: 2px;
+}
+
+
+body {
+	font-size: 15px;
+}
+
+input {
+	font-size: 15px;
+}
+
+.panel {
+	clear: left;
+	margin: 10px;
+	padding: 0px;
+	border: 1px solid black;
+	background-color: #f0f0f0;
+	display: inline-block;
+	width: 180px;
+	height: 145px;
+	position: relative;
+}
+
+.panel.dovolena {
+	height: 190px;
+}
+
+.panel.setting {
+	font-size: 12px;
+}
+
+.panel>.label {
+	text-align: left;
+	background-color: #e0e0e0;
+	font-weight: bolder;
+	margin: 0px 0px 5px 0px;
+	padding: 5px;
+	font-size: 20px;
+}
+
+.panel.setting > input {
+	margin: 2px;
+	width: 4em;
+}
+
+.panel.setting > label {
+	display: inline-block;
+	margin-left: 5px;
+	width: 100px;
+}
+
+.programator_den {
+	text-align: center;
+}
+
+.programator_den>input {
+	width: 4em;
+	margin: 2px;
+}
+
+.dovolena {
+	text-align: center;
+}
+
+.dovolena>input {
+	width: 4.5cm;
+}
+
+.dovolena>* {
+	margin: 2px;
+}
+
+.modes > input {
+	margin: 2px;
+}
+
+.pokoje {
+	
+}
+
+.heatinginfo>.panel.heating {
+	background-color: #fff0f0;
+}
+
+.heatinginfo>.panel.radiator:hover {
+	cursor:pointer;
+}
+
+
+.heatinginfo>.panel.radiator:hover {
+	cursor:pointer;
+	padding:0px;
+}
+
+.panel>.aktualni {
+	position: absolute;
+	right: 10px;
+	bottom: 0px;
+	font-size: 55px;
+}
+
+.panel>.required {
+	position: absolute;
+	right: 10px;
+	top: 40px;
+}
+
+.panel>.heating {
+	position: absolute;
+	left: 10px;
+	bottom: 10px;
+	width: 40px;
+	height: 100px;
+	margin: 0px;
+}
+
+.panel>.for, .runningtime {
+	position: absolute;
+	right: 10px;
+	bottom: 10px;
+	text-align: right;
+	font-size: 15px;
+}
+
+.panel>.for {
+	display: none;
+}
+
+.panel>.runnningtime {
+	display: inline;
+}
+
+.queue {
+	background-color: #d0ffd0;
+	display: inline;
+	border: 1px solid black;
+	clear: float;
+	float: right;
+	margin: 10px;
+	padding: 5px;
+}
+
+.radiatorconfig {
+	border: 1px solid black;
+	margin: 10px;
+	padding: 10px 0px 10px 0px;
+}
