@@ -122,11 +122,9 @@ while ( true ) {
 		
 		// Urceni predchazejiciho stavu zdroje podle nastaveni zdroju
 		$l_heating_curr = false;
-		unset ( $l_source );
-		foreach ( $GLOBALS ['heating'] ['sources'] as $l_source ) {
-			if ( ! in_array ( $l_idx, $l_source ['for'] ) ) {
-				continue;
-			}
+		foreach ( $l_radiator ['poweredby'] as $l_idx ) {
+			unset ( $l_source );
+			$l_source = & $GLOBALS ['heating'] ['sources'] [$l_idx];
 			$l_heating_curr |= $l_source ['state'];
 		}
 		
@@ -174,6 +172,7 @@ while ( true ) {
 		
 		$l_radiator ['control'] ['heating'] = $l_heating;
 		$l_radiator ['required'] = $l_radiator_now ['required'];
+		$l_radiator ['previous'] = $l_radiator ['current'];
 		$l_radiator ['current'] = $l_radiator_now ['current'];
 		$l_radiator ['lastdata'] = $l_radiator_now ['lastdata'];
 		
@@ -188,7 +187,7 @@ while ( true ) {
 		$l_source = & $GLOBALS ['heating'] ['sources'] [$l_idx];
 		
 		$l_state = false;
-		foreach ( $l_source ['for'] as $l_idx ) {
+		foreach ( $l_source ['controledby'] as $l_idx ) {
 			if ( ! isset ( $GLOBALS ['heating'] ['radiators'] [$l_idx] ) ) {
 				continue;
 			}
@@ -207,7 +206,9 @@ while ( true ) {
 		
 		if ( $l_state != $l_source ['state'] ) {
 			if ( $l_state == false ) {
-				$l_source ['summary'] += (time () - strtotime ( $l_source ['runningfrom'] )) / 60;
+				$l_day = mktime ( 0, 0, 0 );
+				$l_source ['statistic'] ['day'] [$l_day] += (time () - strtotime ( $l_source ['runningfrom'] )) / 60;
+				$l_source ['statistic'] ['summary'] += (time () - strtotime ( $l_source ['runningfrom'] )) / 60;
 				$l_source ['runningfrom'] = null;
 			}
 			else {

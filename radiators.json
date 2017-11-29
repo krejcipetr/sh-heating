@@ -1,1 +1,328 @@
-{"radiators":[{"mac":"5F:21:68:32:0F:6B","name":"D\u011btsk\u00fd pokoj","pondeli":[{"from":"5:40","to":"7:00"},{"from":"13:00","to":"21:00"}],"utery":[{"from":"5:40","to":"7:00"},{"from":"19:00","to":"21:00"},{"from":"13:00","to":"16:30"}],"streda":[{"from":"5:40","to":"7:00"},{"from":"13:00","to":"21:00"}],"ctvrtek":[{"from":"5:40","to":"7:00"},{"from":"19:00","to":"21:00"},{"from":"13:00","to":"16:30"}],"patek":[{"from":"5:40","to":"7:00"},{"from":"13:00","to":"21:00"}],"sobota":[{"from":"8:00","to":"21:00"}],"nedele":[{"from":"8:00","to":"21:00"}],"comfort":23,"night":18,"offset":-1,"window_detect":{"sensivity":8,"timer":10},"dovolena":null,"required":18,"current":24,"battery":58,"lastdata":"33 15 19 0b 11\n22 2a 4e 7e 00 00 00 00\n22 2a 72 7e 4e 63 00 00\n22 2a 4e 7e 00 00 00 00\n22 2a 72 7e 4e 63 00 00\n22 2a 4e 7e 00 00 00 00\n30 7e 00 00 00 00 00 00\n30 7e 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n30 24 24 2e fe 08 0a\n3a","control":{"heating":false,"curr_from":1511642007,"direction":"0","state":"stable"},"conf":"modified"},{"mac":"6C:D0:5F:83:84:AF","name":"Lo\u017enice","pondeli":[{"from":"5:40","to":"7:00"},{"from":"16:00","to":"21:00"}],"utery":[{"from":"5:40","to":"7:00"},{"from":"19:00","to":"21:00"}],"streda":[{"from":"5:40","to":"7:00"},{"from":"16:00","to":"21:00"}],"ctvrtek":[{"from":"5:40","to":"7:00"},{"from":"19:00","to":"21:00"}],"patek":[{"from":"5:40","to":"7:00"},{"from":"16:00","to":"21:00"}],"sobota":[{"from":"8:00","to":"21:00"}],"nedele":[{"from":"8:00","to":"21:00"}],"comfort":21,"night":18,"offset":0,"window_detect":{"sensivity":8,"timer":10},"dovolena":null,"required":21,"current":21.5,"battery":57,"lastdata":"33 15 19 0b 11\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 60 7e 00 00 00 00\n30 7e 00 00 00 00 00 00\n30 7e 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n2b 24 24 2a 00 08 0a\n39","control":{"heating":false,"curr_from":1511643147,"direction":"1","state":"stable"},"conf":"modified"},{"mac":"05:3E:14:21:19:C8","name":"Pracovna","pondeli":[],"utery":[],"streda":[],"ctvrtek":[],"patek":[],"sobota":[],"nedele":[],"comfort":22,"night":8,"offset":0,"window_detect":{"sensivity":8,"timer":10},"dovolena":null,"required":8,"current":24.5,"battery":43,"lastdata":"33 15 19 0b 11\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n31 10 10 2c 00 08 0a\n29","control":{"heating":false,"curr_from":1511642763,"direction":"0","state":"stable"},"conf":"saved","direction":false},{"mac":"F5:3E:45:12:2A:8E","name":"Ob\u00fdvac\u00ed pokoj","pondeli":[{"from":"5:40","to":"7:00"},{"from":"16:00","to":"21:00"}],"utery":[{"from":"5:40","to":"7:00"},{"from":"19:00","to":"21:00"}],"streda":[{"from":"5:40","to":"7:00"},{"from":"16:00","to":"21:00"}],"ctvrtek":[{"from":"5:40","to":"7:00"},{"from":"19:00","to":"21:00"}],"patek":[{"from":"5:40","to":"7:00"},{"from":"13:00","to":"21:00"}],"sobota":[{"from":"8:00","to":"22:00"}],"nedele":[{"from":"8:00","to":"22:00"}],"comfort":21,"night":8,"offset":0,"window_detect":{"sensivity":8,"timer":10},"dovolena":null,"required":8,"current":23.5,"battery":59,"lastdata":"34 15 19 0b 11\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 4e 7e 00 00 00 00\n30 84 00 00 00 00 00 00\n30 84 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n2f 2a 10 2a 00 08 0a\n3a","control":{"heating":false,"curr_from":1511642036,"direction":"0","state":"stable"},"conf":"modified"}],"sources":[{"dev":"\/dev\/rfcomm0","name":"Kotel","state":0,"for":[0,1,2,3],"runningfrom":null,"summary":107.26666666667}],"next":"11\/25\/17 22:03:15"}
+{
+	"radiators": [
+		{
+			"mac": "5F:21:68:32:0F:6B",
+			"name": "D\u011btsk\u00fd pokoj",
+			"pondeli": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "13:00",
+					"to": "21:00"
+				}
+			],
+			"utery": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "19:00",
+					"to": "21:00"
+				},
+				{
+					"from": "13:00",
+					"to": "16:30"
+				}
+			],
+			"streda": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "13:00",
+					"to": "21:00"
+				}
+			],
+			"ctvrtek": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "19:00",
+					"to": "21:00"
+				},
+				{
+					"from": "13:00",
+					"to": "16:30"
+				}
+			],
+			"patek": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "13:00",
+					"to": "21:00"
+				}
+			],
+			"sobota": [
+				{
+					"from": "8:00",
+					"to": "21:00"
+				}
+			],
+			"nedele": [
+				{
+					"from": "8:00",
+					"to": "21:00"
+				}
+			],
+			"comfort": 23,
+			"night": 18,
+			"offset": -1,
+			"window_detect": {
+				"sensivity": 8,
+				"timer": 10
+			},
+			"dovolena": null,
+			"required": 18,
+			"current": 24,
+			"battery": 58,
+			"lastdata": "33 15 19 0b 11\n22 2a 4e 7e 00 00 00 00\n22 2a 72 7e 4e 63 00 00\n22 2a 4e 7e 00 00 00 00\n22 2a 72 7e 4e 63 00 00\n22 2a 4e 7e 00 00 00 00\n30 7e 00 00 00 00 00 00\n30 7e 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n30 24 24 2e fe 08 0a\n3a",
+			"control": {
+				"heating": false,
+				"curr_from": 1511642007,
+				"direction": "0",
+				"state": "stable"
+			},
+			"poweredby": [
+				0
+			],
+			"conf": "modified"
+		},
+		{
+			"mac": "6C:D0:5F:83:84:AF",
+			"name": "Lo\u017enice",
+			"pondeli": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "16:00",
+					"to": "21:00"
+				}
+			],
+			"utery": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "19:00",
+					"to": "21:00"
+				}
+			],
+			"streda": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "16:00",
+					"to": "21:00"
+				}
+			],
+			"ctvrtek": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "19:00",
+					"to": "21:00"
+				}
+			],
+			"patek": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "16:00",
+					"to": "21:00"
+				}
+			],
+			"sobota": [
+				{
+					"from": "8:00",
+					"to": "21:00"
+				}
+			],
+			"nedele": [
+				{
+					"from": "8:00",
+					"to": "21:00"
+				}
+			],
+			"comfort": 21,
+			"night": 18,
+			"offset": 0,
+			"window_detect": {
+				"sensivity": 8,
+				"timer": 10
+			},
+			"dovolena": null,
+			"required": 21,
+			"current": 21.5,
+			"battery": 57,
+			"lastdata": "33 15 19 0b 11\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 60 7e 00 00 00 00\n30 7e 00 00 00 00 00 00\n30 7e 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n2b 24 24 2a 00 08 0a\n39",
+			"control": {
+				"heating": false,
+				"curr_from": 1511643147,
+				"direction": "1",
+				"state": "stable"
+			},
+			"poweredby": [
+				0
+			],
+			"conf": "modified"
+		},
+		{
+			"mac": "05:3E:14:21:19:C8",
+			"name": "Pracovna",
+			"pondeli": [],
+			"utery": [],
+			"streda": [],
+			"ctvrtek": [],
+			"patek": [],
+			"sobota": [],
+			"nedele": [],
+			"comfort": 22,
+			"night": 8,
+			"offset": 0,
+			"window_detect": {
+				"sensivity": 8,
+				"timer": 10
+			},
+			"dovolena": null,
+			"required": 8,
+			"current": 24.5,
+			"battery": 43,
+			"lastdata": "33 15 19 0b 11\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n31 10 10 2c 00 08 0a\n29",
+			"control": {
+				"heating": false,
+				"curr_from": 1511642763,
+				"direction": "0",
+				"state": "stable"
+			},
+			"conf": "saved",
+			"poweredby": [
+				0
+			],
+			"direction": false
+		},
+		{
+			"mac": "F5:3E:45:12:2A:8E",
+			"name": "Ob\u00fdvac\u00ed pokoj",
+			"pondeli": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "16:00",
+					"to": "21:00"
+				}
+			],
+			"utery": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "19:00",
+					"to": "21:00"
+				}
+			],
+			"streda": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "16:00",
+					"to": "21:00"
+				}
+			],
+			"ctvrtek": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "19:00",
+					"to": "21:00"
+				}
+			],
+			"patek": [
+				{
+					"from": "5:40",
+					"to": "7:00"
+				},
+				{
+					"from": "13:00",
+					"to": "21:00"
+				}
+			],
+			"sobota": [
+				{
+					"from": "8:00",
+					"to": "22:00"
+				}
+			],
+			"nedele": [
+				{
+					"from": "8:00",
+					"to": "22:00"
+				}
+			],
+			"comfort": 21,
+			"night": 8,
+			"offset": 0,
+			"window_detect": {
+				"sensivity": 8,
+				"timer": 10
+			},
+			"dovolena": null,
+			"required": 8,
+			"current": 23.5,
+			"battery": 59,
+			"lastdata": "34 15 19 0b 11\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 60 7e 00 00 00 00\n22 2a 72 7e 00 00 00 00\n22 2a 4e 7e 00 00 00 00\n30 84 00 00 00 00 00 00\n30 84 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n00 00 00 00 00 00 00 00 00\n80 00 00\n2f 2a 10 2a 00 08 0a\n3a",
+			"control": {
+				"heating": false,
+				"curr_from": 1511642036,
+				"direction": "0",
+				"state": "stable"
+			},
+			"poweredby": [
+				0
+			],
+			"conf": "modified"
+		}
+	],
+	"sources": [
+		{
+			"dev": "\/dev\/rfcomm0",
+			"name": "Kotel",
+			"state": 0,
+			"controledby": [
+				0
+			],
+			"runningfrom": null,
+			"statistic": [
+				{
+					"summary": 107.26666666667,
+					"daily": []
+				}
+			]
+		}
+	],
+	"next": "11\/25\/17 22:03:15"
+}
