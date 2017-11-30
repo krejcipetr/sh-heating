@@ -120,15 +120,82 @@ function dovolena_encode ( $a_definition ) {
  */
 function cometblue_receiveconf ( $a_mac, $a_pin ) {
 	$l_output = array ();
-	$l_ret = 0;
-	$l_cmd = sprintf ( ' %s/cometblue_all.exp "%s" "%s"', realpath ( dirname ( __FILE__ ) ), $a_mac, $a_pin );
-	exec ( $l_cmd, $l_output, $l_ret );
-	if ( $l_ret ) {
-		// fprintf ( STDERR, "Nepodarilo se spustit " . $l_cmd . PHP_EOL );
+	
+	/* Nacteni ze zažízení */
+	try {
+		
+		ini_set ( "expect.timeout", 120 );
+		
+		$l_retry = 3;
+		while ( true ) {
+			$stream = expect_popen ( "LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 btgatt-client -d " . $a_radiator ['mac'] );
+			$cases = array (array ("Connecting to device...:", "connectionstarted" ) );
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "connectionstarted" :
+					break;
+				default :
+					throw new Exception ( "Chyba" );
+			}
+			$cases = array (array (" Done", "OK" ), array (" Failed to connect: Device or resource busy", "Error" ), array (" Failed to connect: Transport endpoint is not connected", "Retry" ) );
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "OK" :
+					break 2;
+				case EXP_TIMEOUT :
+				case EXP_EOF :
+				case "Retry" :
+					$l_retry --;
+					if ( $l_retry < 0 ) {
+						throw new Exception ( "Chyba" );
+					}
+					sleep ( 15 );
+					continue;
+					
+				case "Error" :
+				default :
+					throw new Exception ( "Chyba" );
+			}
+		}
+		
+		$cases = array (array ("47e9ee30-47e9-11e4-8939-164230d1df67", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
+		
+		ini_set ( "expect.timeout", 5 );
+		
+		fwrite ( $stream, "write-value 0x0048 " . $a_pin . "\n" );
+		
+		$cases = array (array ("Write successful", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
+		
+		$cases = array (array ("Read value \([0-9]+ bytes\): ([^\n]+)\n", "data",   EXP_REGEXP ) );
+		foreach ( array ('0x001b', '0x001d', '0x001f', '0x0021', '0x0023', '0x0025', '0x0027', '0x0029', '0x002b', '0x002d', '0x002f', '0x0031', '0x0033', '0x0035', '0x0037', '0x0039', '0x003b', '0x003d','0x003f' ) as $l_idx => $l_handle ) {
+			fwrite ( $stream, "read-value " . $l_handle .  "\n" );
+			
+			switch ( expect_expectl ( $stream, $cases , $l_data) ) {
+				case "data" :
+					break;
+				default :
+					throw new Exception ( "Chyba" );
+			}
+			$l_output[$l_idx] = $l_data[1];
+		}
+	} catch ( Exception $e ) {
+		fclose ( $stream );
 		return false;
 	}
 	
-	$l_output = array_slice ( $l_output, - 19 );
+	fclose ( $stream );
+
+	/* Zpracovani vystupu */
 	
 	$l_radiator = array ();
 	
@@ -168,6 +235,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
  * @param array $a_radiator        	
  */
 function cometblue_sendconf ( $a_radiator, $a_pin ) {
+	/* Zakodovani dat */
 	$l_output = array ();
 	
 	// Aktualni cas a datum
@@ -201,21 +269,78 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 	$l_output [] = sprintf ( "0x80 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s", dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ), dechex ( $a_radiator ['offset'] ), 
 			dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
 	
-	$l_temp = tempnam ( "", "cometblue.conf" );
-	
-	file_put_contents ( $l_temp, implode ( PHP_EOL, $l_output ) . PHP_EOL );
-	
-	if ( ! testing) {
+	/* Nahrání do zažízení */
+	try {
 		
-		$l_cmd = sprintf ( '%s/cometblue_save.exp %s "%s" "%s"', dirname ( __FILE__ ), $a_radiator ['mac'], $a_pin, $l_temp );
-		exec ( $l_cmd, $l_output, $l_ret );
-		if ( $l_ret ) {
-			// fprintf ( STDERR, "Nepodarilo se spustit " . $l_cmd . PHP_EOL );
-			return false;
+		ini_set ( "expect.timeout", 120 );
+		
+		$l_retry = 3;
+		while ( true ) {
+			$stream = expect_popen ( "LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 btgatt-client -d " . $a_radiator ['mac'] );
+			$cases = array (array ("Connecting to device...:", "connectionstarted" ) );
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "connectionstarted" :
+					break;
+				default :
+					throw new Exception ( "Chyba" );
+			}
+			$cases = array (array (" Done", "OK" ), array (" Failed to connect: Device or resource busy", "Error" ), array (" Failed to connect: Transport endpoint is not connected", "Retry" ) );
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "OK" :
+					break 2;
+				case EXP_TIMEOUT :
+				case EXP_EOF :
+				case "Retry" :
+					$l_retry --;
+					if ( $l_retry < 0 ) {
+						throw new Exception ( "Chyba" );
+					}
+					sleep ( 15 );
+					continue;
+				
+				case "Error" :
+				default :
+					throw new Exception ( "Chyba" );
+			}
 		}
 		
-		unlink ( $l_temp );
+		$cases = array (array ("47e9ee30-47e9-11e4-8939-164230d1df67", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
+		
+		ini_set ( "expect.timeout", 5 );
+		
+		fwrite ( $stream, "write-long-value 0x0048 " . $a_pin . "\n" );
+		
+		$cases = array (array ("Write successful", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
+		
+		$cases = array (array ("Write successful", "OK" ) );
+		foreach ( array ('0x001b', '0x001d', '0x001f', '0x0021', '0x0023', '0x0025', '0x0027', '0x0029', '0x002b', '0x002d', '0x002f', '0x0031', '0x0033', '0x0035', '0x0037', '0x0039', '0x003b', '0x003d' ) as $l_idx => $l_handle ) {
+			fwrite ( $stream, "write-value " . $l_handle . " " . $l_output [$l_idx] . "\n" );
+			
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "OK" :
+					break;
+				default :
+					throw new Exception ( "Chyba" );
+			}
+		}
+	} catch ( Exception $e ) {
+		fclose ( $stream );
+		return false;
 	}
+	
+	fclose ( $stream );
 	
 	return true;
 }
