@@ -25,7 +25,7 @@ function radiators_save()
 {
     copy('radiators.json', $GLOBALS['logs'] . 'radiators_' . time() . '.json');
     file_put_contents('radiators.json', json_encode($GLOBALS['heating']));
-
+    
     semup();
 }
 
