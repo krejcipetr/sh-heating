@@ -1,5 +1,5 @@
 <?php
-define("testing", false);
+define("testing", true);
 
 define("INTERVAL", (testing) ? 1 : 10);
 define("PIN", "0 0 0 0");
