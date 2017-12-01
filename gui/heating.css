@@ -2,7 +2,6 @@
 	margin: 2px;
 }
 
-
 body {
 	font-size: 15px;
 }
@@ -19,7 +18,7 @@ input {
 	background-color: #f0f0f0;
 	display: inline-block;
 	width: 180px;
-	height: 145px;
+	height: 160px;
 	position: relative;
 }
 
@@ -40,12 +39,12 @@ input {
 	font-size: 20px;
 }
 
-.panel.setting > input {
+.panel.setting>input {
 	margin: 2px;
 	width: 4em;
 }
 
-.panel.setting > label {
+.panel.setting>label {
 	display: inline-block;
 	margin-left: 5px;
 	width: 100px;
@@ -72,7 +71,7 @@ input {
 	margin: 2px;
 }
 
-.modes > input {
+.modes>input {
 	margin: 2px;
 }
 
@@ -80,18 +79,26 @@ input {
 	
 }
 
-.heatinginfo>.panel.heating {
-	background-color: #fff0f0;
+.heatinginfo>.panel{
+	height: 145px;
+}
+
+.heatinginfo>.radiator.heating {
+	background-image: url('sun.png');
+	background-repeat: no-repeat;
+	background-position: bottom right;
+	background-color: #add9db;
+}
+
+.heatinginfo>.radiator.cooling {
+	background-image: url('moon.png');
+	background-repeat: no-repeat;
+	background-position: bottom right;
+	background-color: #82919a;
 }
 
 .heatinginfo>.panel.radiator:hover {
-	cursor:pointer;
-}
-
-
-.heatinginfo>.panel.radiator:hover {
-	cursor:pointer;
-	padding:0px;
+	cursor: pointer;
 }
 
 .panel>.aktualni {
