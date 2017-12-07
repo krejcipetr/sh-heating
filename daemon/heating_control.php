@@ -63,6 +63,7 @@ else {
 while ( true ) {
 	// Inicializace pres kazdym krokem
 	$l_lowbattery = array ();
+	$l_day = mktime ( 0, 0, 0 );
 	
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 	
@@ -170,6 +171,17 @@ while ( true ) {
 			$l_radiator ['control'] ['state'] = 'stable';
 		}
 		
+		// Logovani statistiky
+		if ( $l_heating != $l_radiator ['control'] ['heating'] ) {
+			if ( $l_heating == false ) {
+				$l_radiator ['statistic'] ['day'] [$l_day] += (time () - strtotime ( $l_radiator ['control'] ['runningfrom'] )) / 60;
+				$l_radiator ['statistic'] ['summary'] += (time () - strtotime ( $l_radiator ['control'] ['runningfrom'] )) / 60;
+			}
+			else {
+				$l_radiator ['control'] ['runningfrom'] = strftime ( "%x %X" );
+			}
+		}
+		
 		$l_radiator ['control'] ['heating'] = $l_heating;
 		$l_radiator ['required'] = $l_radiator_now ['required'];
 		$l_radiator ['previous'] = $l_radiator ['current'];
@@ -206,7 +218,6 @@ while ( true ) {
 		
 		if ( $l_state != $l_source ['state'] ) {
 			if ( $l_state == false ) {
-				$l_day = mktime ( 0, 0, 0 );
 				$l_source ['statistic'] ['day'] [$l_day] += (time () - strtotime ( $l_source ['runningfrom'] )) / 60;
 				$l_source ['statistic'] ['summary'] += (time () - strtotime ( $l_source ['runningfrom'] )) / 60;
 				$l_source ['runningfrom'] = null;
