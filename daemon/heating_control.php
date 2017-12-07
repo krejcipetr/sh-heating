@@ -174,6 +174,7 @@ while ( true ) {
 		// Logovani statistiky
 		if ( $l_heating != $l_radiator ['control'] ['heating'] ) {
 			if ( $l_heating == false ) {
+				$l_radiator ['control'] ['runningfrom'] = null;
 				$l_radiator ['statistic'] ['day'] [$l_day] += (time () - strtotime ( $l_radiator ['control'] ['runningfrom'] )) / 60;
 				$l_radiator ['statistic'] ['summary'] += (time () - strtotime ( $l_radiator ['control'] ['runningfrom'] )) / 60;
 			}
