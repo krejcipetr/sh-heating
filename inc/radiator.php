@@ -8,9 +8,13 @@ require_once 'sem.php';
  * @return string
  */
 function control_info_radiator ( $a_radiator ) {
+	$l_day = mktime ( 0, 0, 0 );
+	$l_cas = ($a_radiator ['control'] ['runningfrom']) ? ((time () - strtotime ( $a_radiator ['control'] ['runningfrom'] )) / 60) : 0;
 	return sprintf ( "Name: %s" . PHP_EOL, $a_radiator ['name'] ) . (($a_radiator ['current'] != $a_radiator ['previous']) ? sprintf ( "Current temp: %.1f=>%.1f" . PHP_EOL, $a_radiator ['previous'], $a_radiator ['current'] ) : sprintf (
 			"Current temp: %.1f" . PHP_EOL, $a_radiator ['current'] )) . sprintf ( "Required temp: %.1f" . PHP_EOL, $a_radiator ['required'] ) . sprintf ( "Direction: %d" . PHP_EOL, $a_radiator ['control'] ['direction'] ) . sprintf (
-			"Heating: %d" . PHP_EOL, $a_radiator ['control'] ['heating'] ) . sprintf ( "State: %s" . PHP_EOL, $a_radiator ['control'] ['state'] );
+			"Heating: %d" . PHP_EOL, $a_radiator ['control'] ['heating'] ) . sprintf ( "State: %s" . PHP_EOL, $a_radiator ['control'] ['state'] ) . sprintf ( "Today: %.1f hours" . PHP_EOL, 
+			floatval ( ($a_radiator ['statistic'] ['day'] [$l_day] + $l_cas) / 60 ) ) . sprintf ( "Summary: %.1f hours" . PHP_EOL, floatval ( ($a_radiator ['statistic'] ['summary'] + $l_cas) / 60 ) ) . sprintf ( "Running from: %s" . PHP_EOL, 
+			$a_radiator ['control'] ['runningfrom'] ) . sprintf ( "Time: %.1f min" . PHP_EOL, floatval ( $l_cas ) );
 }
 
 /**
