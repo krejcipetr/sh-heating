@@ -130,6 +130,10 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 		$l_retry = 3;
 		while ( true ) {
 			$stream = fopen ( "expect://LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_mac, "at" );
+			if (! is_resource($stream)) {
+				return false;
+			}
+
 			$cases = array (array ("Connecting to device...", "connectionstarted" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "connectionstarted" :
@@ -137,10 +141,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 				default :
 					throw new Exception ( "Chyba" );
 			}
-			$cases = array (
-				array ("Done", "OK" ),
-				array ("Failed to connect: Device or resource busy", "Error" ),
-				array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
+			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Error" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "OK" :
 					break 2;
@@ -194,20 +195,20 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 			}
 			$l_output [$l_idx] = $l_data [1];
 		}
+
+		// Poslani CTRL-C
+		fwrite ( $stream, chr ( 3 ) );
+
+		$cases = array (array ("Shutting down...", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
 	} catch ( Exception $e ) {
 		fclose ( $stream );
 		return false;
-	}
-
-	// Poslani CTRL-C
-	fwrite ( $stream, chr ( 3 ) );
-
-	$cases = array (array ("Shutting down...", "OK" ) );
-	switch ( expect_expectl ( $stream, $cases ) ) {
-		case "OK" :
-			break;
-		default :
-			throw new Exception ( "Chyba" );
 	}
 
 	fclose ( $stream );
@@ -294,7 +295,10 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 		$l_retry = 3;
 		while ( true ) {
-			$stream = fopen ( "expect://LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_mac, "at" );
+			$stream = fopen ( "expect://LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_radiator['mac'], "at" );
+			if (! is_resource($stream)) {
+				return false;
+			}
 			$cases = array (array ("Connecting to device...", "connectionstarted" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "connectionstarted" :
@@ -302,10 +306,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 				default :
 					throw new Exception ( "Chyba" );
 			}
-			$cases = array (
-				array ("Done", "OK" ),
-				array ("Failed to connect: Device or resource busy", "Error" ),
-				array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
+			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Error" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "OK" :
 					break 2;
@@ -358,20 +359,21 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 					throw new Exception ( "Chyba" );
 			}
 		}
+
+		// Poslani CTRL-C
+		fwrite ( $stream, chr ( 3 ) );
+
+		$cases = array (array ("Shutting down...", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
 	} catch ( Exception $e ) {
+		fprintf ( STDERR, $e->getTraceAsString ().PHP_EOL.$e->getMessage() );
 		fclose ( $stream );
 		return false;
-	}
-
-	// Poslani CTRL-C
-	fwrite ( $stream, chr ( 3 ) );
-
-	$cases = array (array ("Shutting down...", "OK" ) );
-	switch ( expect_expectl ( $stream, $cases ) ) {
-		case "OK" :
-			break;
-		default :
-			throw new Exception ( "Chyba" );
 	}
 
 	fclose ( $stream );

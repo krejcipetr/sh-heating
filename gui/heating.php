@@ -5,6 +5,8 @@ header("Expires: -1", true);
 
 chdir(dirname(__FILE__) . '/..');
 
+$l_day = mktime(0, 0, 0);
+
 require_once 'config.php';
 require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
@@ -17,6 +19,18 @@ if (isset($_REQUEST['changestate'])) {
     $l_radiator = & $GLOBALS['heating']['radiators'][$_REQUEST['changestate']];
     $l_radiator['control']['direction'] = $_REQUEST['newstate'];
     $l_radiator['required'] = ($l_radiator['control']['direction']) ? $l_radiator['comfort'] : $l_radiator['night'];
+
+    if ($l_radiator['control']['direction'] != $l_radiator['control']['heating']) {
+    	if ( $l_radiator['control']['direction'] ) {
+    		$l_radiator['control']['runningfrom'] = strftime ( "%x %X" );
+    	}
+    	else {
+    		$l_radiator ['statistic'] ['day'] [$l_day] += (time () - strtotime ( $l_radiator ['control'] ['runningfrom'] )) / 60;
+    		$l_radiator ['statistic'] ['summary'] += (time () - strtotime ( $l_radiator ['control'] ['runningfrom'] )) / 60;
+    		$l_radiator ['control'] ['runningfrom'] = null;
+    	}
+    }
+
     $l_radiator['control']['heating'] = $l_radiator['control']['direction'];
     $l_radiator['conf'] = 'modified';
     unset($l_radiator);
@@ -89,8 +103,6 @@ foreach ($GLOBALS['heating']['sources'] as $l_idx => $l_source) {
     }
     ?><br>
 			<?php
-
-    $l_day = mktime(0, 0, 0);
     printf("%d&nbsp;min", floatval(($l_source['statistic']['day'][$l_day] + $l_cas)));
     ?><br>
 			<?php
