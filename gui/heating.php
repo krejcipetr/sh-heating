@@ -34,7 +34,7 @@ if ( isset ( $_REQUEST ['refresh'] ) ) {
 }
 
 if ( isset ( $_REQUEST ['changemode'] ) ) {
-	$_SESSION['viewmode']['radiator'][$_REQUEST ['changestate']] = $_REQUEST['newmode']; 
+	$_SESSION['viewmode']['radiator'][$_REQUEST ['changemode']] = $_REQUEST['newmode'];
 }
 
 ?>
@@ -79,28 +79,28 @@ foreach ( $GLOBALS ['heating'] ['sources'] as $l_idx => $l_source ) {
 }
 // RADIATORY
 foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
-	?>    
+	?>
 		<div
-		class="panel radiator <?php echo $l_radiator['control']['direction']?"heating":"cooling";?>"
-		onclick="document.location.href='?changestate=<?php echo $l_idx;?>&newstate=<?php echo (! $l_radiator['control']['direction'])?1:0;?>';">
+		class="panel radiator <?php echo $l_radiator['control']['direction']?"heating":"cooling";?>">
 		<div class="label"><?php echo htmlspecialchars($l_radiator['name'])?></div>
 		<img class="heating"
 			src="<?php echo ($l_radiator['control']["heating"])?'heating.png':'noheating.png';?>"
-			title="topeni">
+			title="topeni" onclick="document.location.href='?changestate=<?php echo $l_idx;?>&newstate=<?php echo (! $l_radiator['control']['direction'])?1:0;?>';">
+		<span class="aktualni"><?php printf("%.1f",$l_radiator["current"]);?></span>
 
 <?php if ( $_SESSION['viewmode']['radiator'][$l_idx]) {
-			$l_day = mktime(0,0,0);	
+			$l_day = mktime(0,0,0);
 			$l_cas = ($l_radiator['control'] ['runningfrom'] != null) ? intval ( (time () - strtotime ( $l_radiator ['control']['runningfrom'] )) / 60 ) : 0;
-			echo '<span class="required">';
+			echo '<span class="required"';
+			echo 'onclick="document.location.href=\'?changemode=',$l_idx,'&newmode=0\';"';
+			echo ' >';
 			printf ("%.1f&nbsp;min", floatval(($l_radiator ['statistic']['day'][$l_day]+ $l_cas)));
 			echo '&nbsp;,&nbsp;';
 			printf ("%.1f&nbsp;hod", floatval(($l_radiator ['statistic']['summary'] + $l_cas)/60));
 			echo '</span>';
     }
-	else { ?>		
-		
-		<span class="aktualni"><?php printf("%.1f",$l_radiator["current"]);?></span>
-		<span class="required"><?php printf("%s", $l_radiator["required"]);?> °C</span>
+	else { ?>
+		<span class="required" onclick="document.location.href='?changemode=<?php echo $l_idx;?>&newmode=1';"><?php printf("%s", $l_radiator["required"]);?> °C</span>
 <?php }?>
 	</div>
 <?php
