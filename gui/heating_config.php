@@ -19,19 +19,7 @@ if ( isset ( $_REQUEST ['refresh'] ) ) {
 	radiators_load ();
 }
 
-?>
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<meta charset="utf-8">
-<link rel="stylesheet" type="text/css" href="heating.css" />
-<meta http-equiv="refresh"
-	content="<?php  strtotime($GLOBALS['heating']['next'])-time() + 10;?>; url=heating_config.php">
-</head>
-<body style=""><?php
-
-$l_modes = array ("Radiátory", "Dovolená" );
+$l_modes = array ("Radiátory", "Dovolená", "Kotle" );
 
 if ( isset ( $_REQUEST ['mode'] ) ) {
 	$_SESSION ['mode'] = intval ( $_REQUEST ['mode'] );
@@ -47,6 +35,14 @@ if ( isset ( $_REQUEST ['radiator'] ) ) {
 if ( ! isset ( $_SESSION ['radiator'] ) ) {
 	reset ( $GLOBALS ['heating'] ['radiators'] );
 	$_SESSION ['radiator'] = key ( $GLOBALS ['heating'] ['radiators'] );
+}
+
+if ( isset ( $_REQUEST ['source'] ) ) {
+	$_SESSION ['source'] = intval ( $_REQUEST ['source'] );
+}
+if ( ! isset ( $_SESSION ['source'] ) ) {
+	reset ( $GLOBALS ['heating'] ['sources'] );
+	$_SESSION ['source'] = key ( $GLOBALS ['heating'] ['sources'] );
 }
 
 // Ma se ulozit dovolena?
@@ -133,17 +129,6 @@ else {
 	semup ();
 }
 
-// generace stranky
-
-// Lista s mody
-echo '<div class="modes">';
-foreach ( $l_modes as $l_idx => $l_mode ) {
-	echo '<input type="button" value="', htmlspecialchars ( $l_mode ), '" onclick="document.location.href=\'heating_config.php?mode=', $l_idx, '\';">';
-}
-echo '</div>';
-
-// Informace o zmenach k nahrani do hlavice
-echo '<div class="queue">Změny na nahrání:';
 $l_zmeny = array ();
 foreach ( $GLOBALS ['heating'] ['radiators'] as $l_radiator ) {
 	if ( $l_radiator ['conf'] != 'modified' ) {
@@ -151,6 +136,30 @@ foreach ( $GLOBALS ['heating'] ['radiators'] as $l_radiator ) {
 	}
 	$l_zmeny [] = $l_radiator ['name'];
 }
+
+?>
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta title="Konfigurace vytápění">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="heating.css" />
+<meta http-equiv="refresh"
+	content="<?php  strtotime($GLOBALS['heating']['next'])-time() + 10;?>; url=<?php basename(__FILE__)?>">
+</head>
+<body style=""><?php
+// generace stranky
+
+// Lista s mody
+echo '<div class="modes">';
+foreach ( $l_modes as $l_idx => $l_mode ) {
+	echo '<input type="button" value="', htmlspecialchars ( $l_mode ), '" onclick="document.location.href=\'?mode=', $l_idx, '\';">';
+}
+echo '</div>';
+
+// Informace o zmenach k nahrani do hlavice
+echo '<div class="queue">Změny na nahrání:';
 
 if ( $l_zmeny ) {
 	echo implode ( "&nbsp;,&nbsp;", $l_zmeny );
@@ -160,8 +169,36 @@ else {
 }
 echo "</div>";
 // Vlastni zobrazeni
-echo '<form action="heating_config.php" method="post" name="data">';
+echo '<form action="#" method="post" name="data">';
 switch ( $_SESSION ['mode'] ) {
+	// KOTLE
+	case 2 :
+		echo '<div class="pokoje">';
+		foreach ( $GLOBALS ['heating'] ['sources'] as $l_idx => $l_source ) {
+			echo '<input type="button" value="', htmlspecialchars ( $l_source ['name'] ), '" onclick="document.location.href=\'?source=', $l_idx, '\';">';
+		}
+		echo '</div>';
+		echo '<div class="radiatorconfig">';
+		$l_source = $GLOBALS ['heating'] ['sources'] [$_SESSION ['source']];
+		echo '<div style="text-align:center;"><h1>', htmlspecialchars ( $l_source ['name'] ), '</h1></div>';
+		echo '<div class="panel setting">';
+		echo '<div class="label">Zdroj pro</div>';
+		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
+			echo '<label>', htmlspecialchars ( $l_radiator ['name'] ), '</label>';
+			echo '<input type="checkbox" name="powered', $l_idx, '" ', ((in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] )) ? 'checked' : ''), '>';
+			echo '<br>';
+		}
+		echo '</div>';
+		echo '<div class="panel setting">';
+		echo '<div class="label">Jsem ovládaný</div>';
+		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
+			echo '<label>', htmlspecialchars ( $l_radiator ['name'] ), '</label>';
+			echo '<input type="checkbox" name="controlled', $l_idx, '" ', ((in_array ( $l_idx, $l_source ['controlledby'] )) ? 'checked' : ''), '>';
+			echo '<br>';
+		}
+		echo '</div>';
+		echo '</div>';
+	
 	// Dovolena
 	case 1 :
 		// Z prniho radiatoru nacti dovolenou
@@ -180,9 +217,9 @@ switch ( $_SESSION ['mode'] ) {
 	case 0 :
 		echo '<div class="pokoje">';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
-			echo '<input type="button" value="', htmlspecialchars ( $l_radiator ['name'] ), '" onclick="document.location.href=\'heating_config.php?radiator=', $l_idx, '\';">';
+			echo '<input type="button" value="', htmlspecialchars ( $l_radiator ['name'] ), '" onclick="document.location.href=\'?radiator=', $l_idx, '\';">';
 		}
-		echo '<input type="button" value="Všechny" onclick="document.location.href=\'heating_config.php?radiator=-1\';">';
+		echo '<input type="button" value="Všechny" onclick="document.location.href=\'?radiator=-1\';">';
 		echo '</div>';
 		
 		echo '<div class="radiatorconfig">';
