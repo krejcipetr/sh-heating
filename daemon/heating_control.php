@@ -152,6 +152,10 @@ while ( true ) {
 			$l_heating = true;
 			$l_radiator ['control'] ['state'] = 'heating-tempbelow-teplota pod pozadovanou hranici';
 		}
+		elseif ( $l_radiator_now ['current'] > $l_radiator['current']  && $l_heating_curr) {
+			$l_heating = true;
+			$l_radiator ['control'] ['state'] = 'heating-temp raising-topi se';
+		}
 		elseif ( $l_radiator ['control'] ['heating'] && $l_radiator_now ['current'] < $l_radiator ['current'] ) {
 			$l_heating = false;
 			$l_radiator ['control'] ['state'] = 'cooling-on-tempdown-hlavice se zavrela';
