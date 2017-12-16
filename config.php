@@ -10,5 +10,5 @@ define("delaydisplay", 2);
 
 date_default_timezone_set("Europe/Prague");
 
-$logs = realpath(dirname(__FILE__)) . "/logs/";
+$GLOBALS['logs'] = realpath(dirname(__FILE__)) . "/state/";
 
