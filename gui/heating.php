@@ -7,7 +7,7 @@ chdir(dirname(__FILE__) . '/..');
 
 $l_day = mktime(0, 0, 0);
 
-require_once 'config.php';
+require_once 'state/config.php';
 require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
 

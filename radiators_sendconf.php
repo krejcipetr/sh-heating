@@ -1,7 +1,7 @@
 <?php
 chdir ( dirname ( __FILE__ ) );
 
-require_once 'cometblue.php';
+require_once 'state/cometblue.php';
 require_once 'inc/radiator.php';
 require_once 'inc/config.php';
 

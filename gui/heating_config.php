@@ -5,7 +5,7 @@ header ( "Expires: -1", true );
 
 chdir ( dirname ( __FILE__ ) . '/..' );
 
-require_once 'config.php';
+require_once 'state/config.php';
 require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
 

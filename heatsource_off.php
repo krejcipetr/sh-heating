@@ -1,7 +1,7 @@
 <?php
 chdir(dirname(__FILE__));
 
-require_once 'config.php';
+require_once 'state/config.php';
 require_once 'inc/bt04a.php';
 
 foreach ($GLOBALS['heating']['sources'] as $l_source) {

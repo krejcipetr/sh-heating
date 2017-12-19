@@ -1,7 +1,7 @@
 <?php
 chdir ( dirname ( __FILE__ ) . '/..' );
 
-require_once 'config.php';
+require_once 'state/config.php';
 require_once 'inc/bt04a.php';
 require_once 'inc/cometblue.php';
 require_once 'inc/radiator.php';
@@ -108,6 +108,7 @@ while ( true ) {
 				continue;
 			}
 			else {
+				echo PHP_EOL;
 				$l_radiator_now = $l_radiator;
 			}
 		}
