@@ -12,3 +12,5 @@ foreach ( $GLOBALS ['heating']['radiators'] as $l_idx => $l_radiator ) {
 	
 	cometblue_sendconf ( $l_radiator, PIN );
 }
+
+semup();
