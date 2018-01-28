@@ -33,7 +33,7 @@ function control_info_source ( $a_source ) {
  * Ulozi globalni promenou na FS
  */
 function radiators_save () {
-	file_put_contents ( $GLOBALS ['logs'] . 'radiators_logs.json', file_get_contents ( 'radiators.json' ), FILE_APPEND );
+	file_put_contents ( $GLOBALS ['logs'] . 'radiators_logs.json', file_get_contents ( $GLOBALS ['logs'] . 'radiators.json' ), FILE_APPEND );
 	file_put_contents ( $GLOBALS ['logs'] . 'radiators.json', json_encode ( $GLOBALS ['heating'] ) );
 
 	semup ();

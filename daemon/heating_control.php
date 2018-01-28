@@ -2,7 +2,7 @@
 chdir ( dirname ( __FILE__ ) . '/..' );
 
 require_once 'config.php';
-require_once 'inc/bt04a.php';
+require_once 'inc/source.php';
 require_once 'inc/cometblue.php';
 require_once 'inc/radiator.php';
 
@@ -14,7 +14,10 @@ printf ( "Reading state of heat source\n" );
 foreach ( array_keys ( $GLOBALS ['heating'] ['sources'] ) as $l_idx ) {
 	unset ( $l_source );
 	$l_source = & $GLOBALS ['heating'] ['sources'] [$l_idx];
-	$l_source ['state'] = bt04a_getstate ( $l_source ['dev'] );
+
+	source_init ( $l_source );
+
+	$l_source ['state'] = source_getstate ( $l_source );
 	printf ( "Current state of %s: %b\n", $l_source ['name'], $l_source ['state'] );
 }
 
@@ -152,7 +155,7 @@ while ( true ) {
 			$l_heating = true;
 			$l_radiator ['control'] ['state'] = 'heating-tempbelow-teplota pod pozadovanou hranici';
 		}
-		elseif ( $l_radiator_now ['current'] > $l_radiator['current']  && $l_heating_curr) {
+		elseif ( $l_radiator_now ['current'] > $l_radiator ['current'] && $l_heating_curr ) {
 			$l_heating = true;
 			$l_radiator ['control'] ['state'] = 'heating-temp raising-topi se';
 		}
@@ -214,10 +217,10 @@ while ( true ) {
 		}
 		// Spusteni/ vypnuti kotle
 		if ( $l_state ) {
-			bt04a_on ( $l_source ['dev'] );
+			source_on ( $l_source );
 		}
 		else {
-			bt04a_off ( $l_source ['dev'] );
+			source_off ( $l_source );
 		}
 
 		if ( $l_state != $l_source ['state'] ) {
@@ -292,4 +295,6 @@ while ( true ) {
 	}
 }
 
+// Zavreni zdroju
+source_close();
 

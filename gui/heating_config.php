@@ -45,6 +45,12 @@ if ( ! isset ( $_SESSION ['source'] ) ) {
 	$_SESSION ['source'] = key ( $GLOBALS ['heating'] ['sources'] );
 }
 
+/**
+ * Priznak zmeny
+ * @var boolen $l_zmena
+ */
+$l_zmena = false;
+
 // Ma se ulozit dovolena?
 if ( isset ( $_REQUEST ['dovolena'] ) ) {
 	if ( empty ( $_REQUEST ['from'] ) ) {
@@ -127,6 +133,9 @@ if ( isset ( $_REQUEST ['sourcesettings'] ) ) {
 	// Nastaveni kdo zapina zdroj
 	$l_source ['controledby'] = $_REQUEST ['controled'];
 
+	$l_source ['type'] = $_REQUEST ['type'];
+	$l_source ['type_params'] = $_REQUEST ['type_params'];
+
 	// Nastaveni kdo vytapi radiator
 	foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
 		unset ( $l_radiator );
@@ -141,12 +150,14 @@ if ( isset ( $_REQUEST ['sourcesettings'] ) ) {
 	}
 	unset ( $l_radiator );
 	unset ( $l_source );
+	$l_zmena = true;
 }
 
-$l_zmena = false;
+
 foreach ( $GLOBALS ['heating'] ['radiators'] as $l_radiator ) {
 	$l_zmena |= $l_radiator ['conf'] == 'modified';
 }
+
 if ( $l_zmena ) {
 	radiators_save ();
 	touch ( fastfile );
@@ -208,23 +219,41 @@ switch ( $_SESSION ['mode'] ) {
 		echo '<div class="radiatorconfig">';
 		$l_source = $GLOBALS ['heating'] ['sources'] [$_SESSION ['source']];
 		echo '<div style="text-align:center;"><h1>', htmlspecialchars ( $l_source ['name'] ), '</h1></div>';
+
 		echo '<div class="panel setting">';
 		echo '<div class="label">Zdroj pro</div>';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
 			echo '<label>', htmlspecialchars ( $l_radiator ['name'] ), '</label>';
-			echo '<input type="checkbox" value="',$l_idx,'" name="powered[]" ', ((in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] )) ? 'checked' : ''), '>';
+			echo '<input type="checkbox" value="', $l_idx, '" name="powered[]" ', ((in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] )) ? 'checked' : ''), '>';
 			echo '<br>';
 		}
 		echo '</div>';
+
 		echo '<div class="panel setting">';
 		echo '<div class="label">Jsem ovládaný</div>';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
 			echo '<label>', htmlspecialchars ( $l_radiator ['name'] ), '</label>';
-			echo '<input type="checkbox" value="',$l_idx,'" name="controled[]" ', ((in_array ( $l_idx, $l_source ['controledby'] )) ? 'checked' : ''), '>';
+			echo '<input type="checkbox" value="', $l_idx, '" name="controled[]" ', ((in_array ( $l_idx, $l_source ['controledby'] )) ? 'checked' : ''), '>';
 			echo '<br>';
 		}
 		echo '</div>';
+
+		echo '<div class="panel setting">';
+		echo '<div class="label">Typ</div>';
+		echo '<label>Typ</label>';
+		echo '<select name="type">';
+		foreach ( array ("BT-04A", "ESP8266" ) as $l_type ) {
+			echo '<option value="', $l_type, '" ', (($l_type == $l_source ['type']) ? 'selected' : ''), '>', htmlspecialchars ( $l_type ), '</option>';
+		}
+		echo '</select>';
+		echo '<label>Nastavení</label>';
+		echo '<input type="text" name="type_params" value="', $l_source ['type_params'], '" >';
+
+		echo '</div>';
+
 		echo '<div style="text-align:center;"><input type="submit" name="sourcesettings" value="Uložit"></div>';
+
+		// Konec vseho
 		echo '</div>';
 
 		break;

@@ -1,14 +1,20 @@
 <?php
-chdir(dirname(__FILE__));
+chdir ( dirname ( __FILE__ ) );
 
 require_once 'config.php';
-require_once 'inc/bt04a.php';
+require_once 'inc/source.php';
+require_once 'inc/radiator.php';
 
-foreach ($GLOBALS['heating']['sources'] as $l_source) {
-    bt04a_on($l_source['dev']);
+radiators_load();
+
+foreach ( $GLOBALS ['heating'] ['sources'] as $l_source ) {
+	source_init ( $l_source );
 }
-sleep(20);
-foreach ($GLOBALS['heating']['sources'] as $l_source) {
-	printf("%s=%s" . PHP_EOL, $l_source['name'],
-			(bt04a_getstate($l_source['dev'])) ? "On" : "Off");
+
+foreach ( $GLOBALS ['heating'] ['sources'] as $l_source ) {
+	source_on ( $l_source );
+}
+sleep ( 20 );
+foreach ( $GLOBALS ['heating'] ['sources'] as $l_source ) {
+	printf ( "%s=%s" . PHP_EOL, $l_source ['name'], (source_getstate ( $l_source )) ? "On" : "Off" );
 }

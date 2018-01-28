@@ -7,7 +7,7 @@
  * @return boolean
  */
 function bt04a_getstate ( $a_device ) {
-	$l_rfcomm = fopen ( $a_device, "w+b" );
+	$l_rfcomm = fopen ( '/dev/rfcomm' . $a_device, "w+b" );
 	if ( $l_rfcomm === false ) {
 		die ( "Nepodarilo se otevrit spojeni na kotel" );
 	}
@@ -32,7 +32,7 @@ function bt04a_getstate ( $a_device ) {
  * @param string $a_device
  */
 function bt04a_on ( $a_device ) {
-	file_put_contents ( $a_device, base64_decode ( "r/0A3w==" ), FILE_APPEND );
+	file_put_contents ( '/dev/rfcomm' . $a_device, base64_decode ( "r/0A3w==" ), FILE_APPEND );
 }
 
 /**
@@ -41,5 +41,5 @@ function bt04a_on ( $a_device ) {
  * @param string $a_device
  */
 function bt04a_off ( $a_device ) {
-	file_put_contents ( $a_device, base64_decode ( "r/0B3w==" ), FILE_APPEND );
+	file_put_contents ( '/dev/rfcomm' . $a_device, base64_decode ( "r/0B3w==" ), FILE_APPEND );
 }
