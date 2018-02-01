@@ -16,9 +16,9 @@ input {
 	padding: 0px;
 	border: 1px solid black;
 	background-color: #f0f0f0;
-	display: inline-block;
+	display: inline-table;
 	width: 180px;
-	height: 160px;
+	height: 180px;
 	position: relative;
 }
 
@@ -45,7 +45,7 @@ input {
 }
 
 .panel.setting>label {
-	display: inline-block;
+	display: inline-table;
 	margin-left: 5px;
 	width: 100px;
 }

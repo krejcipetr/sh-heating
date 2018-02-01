@@ -18,3 +18,5 @@ sleep ( 20 );
 foreach ( $GLOBALS ['heating'] ['sources'] as $l_source ) {
 	printf ( "%s=%s" . PHP_EOL, $l_source ['name'], (source_getstate ( $l_source )) ? "On" : "Off" );
 }
+
+semup();
