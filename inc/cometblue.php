@@ -129,7 +129,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 
 		$l_retry = 3;
 		while ( true ) {
-			$stream = fopen ( "expect://LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_mac, "at" );
+			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_mac, "at" );
 			if (! is_resource($stream)) {
 				return false;
 			}
@@ -295,7 +295,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 		$l_retry = 3;
 		while ( true ) {
-			$stream = fopen ( "expect://LC_ALL=en_US-UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_radiator['mac'], "at" );
+			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_radiator['mac'], "at" );
 			if (! is_resource($stream)) {
 				return false;
 			}
