@@ -283,7 +283,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 	$l_output [] = "0x80 00 00";
 
 	// Teploty
-	$a_radiator ['offset'] = ($a_radiator ['offset'] < 0) ? 256 + 2 * $a_radiator ['offset'] : 2 * $a_radiator ['offset'];
+	$a_radiator ['offset'] = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);
 	$l_output [] = sprintf ( "0x80 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s", dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ), dechex ( $a_radiator ['offset'] ),
 			dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
 
