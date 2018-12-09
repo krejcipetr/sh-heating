@@ -10,6 +10,7 @@ chdir ( dirname ( __FILE__ ) . '/..' );
 require_once 'config.php';
 require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
+require_once 'inc/source.php';
 
 session_start ();
 
@@ -40,11 +41,11 @@ if ( ! isset ( $_SESSION ['radiator'] ) ) {
 }
 
 if ( isset ( $_REQUEST ['source'] ) ) {
-	$_SESSION ['source'] = intval ( $_REQUEST ['source'] );
+	$_SESSION ['source'] = $_REQUEST ['source'];
 }
 if ( ! isset ( $_SESSION ['source'] ) ) {
-	reset ( $GLOBALS ['heating'] ['sources'] );
-	$_SESSION ['source'] = key ( $GLOBALS ['heating'] ['sources'] );
+	$l_sourcex = reset ( $GLOBALS ['heating'] ['sources'] );
+	$_SESSION ['source'] = $l_sourcex ['name'];
 }
 
 /**
@@ -74,7 +75,7 @@ if ( isset ( $_REQUEST ['dovolena'] ) ) {
 	if ( $l_to === false ) {
 		die ( "Chybne do" );
 	}
-	
+
 	foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
 		$GLOBALS ['heating'] ['radiators'] [$l_idx] ['dovolena'] = array ('from' => strftime ( "%x %X", $l_from ), 'to' => strftime ( "%x %X", $l_to ), "temp" => floatval ( $_REQUEST ["temp"] ) );
 		$GLOBALS ['heating'] ['radiators'] [$l_idx] ['conf'] = 'modified';
@@ -89,26 +90,26 @@ if ( isset ( $_REQUEST ['dovolenadel'] ) ) {
 
 // Ma se ulozit nastaveni radiatoru/hlavice
 if ( isset ( $_REQUEST ['radiatorsettings'] ) ) {
-	
+
 	if ( $_SESSION ['radiator'] == - 1 ) {
 		$l_radiators = array_keys ( $GLOBALS ['heating'] ['radiators'] );
 	}
 	else {
 		$l_radiators = array ($_SESSION ['radiator'] );
 	}
-	
+
 	// Jednotlive radiatory
 	foreach ( $l_radiators as $l_idx ) {
 		unset ( $l_radiator );
 		$l_radiator = &  $GLOBALS ['heating'] ['radiators'] [$l_idx];
-		
+
 		foreach ( array ('required', 'night', 'comfort', 'offset' ) as $l_definition ) {
 			if ( ! is_numeric ( $_REQUEST [$l_definition] ) ) {
 				continue;
 			}
 			$l_radiator [$l_definition] = floatval ( $_REQUEST [$l_definition] );
 		}
-		
+
 		foreach ( array ("pondeli", "utery", "streda", "ctvrtek", "patek", "sobota", "nedele" ) as $l_den ) {
 			for ( $l_idx2 = 0; $l_idx2 < 4; $l_idx2 ++ ) {
 				if ( empty ( $_REQUEST ['from' . $l_den . $l_idx2] ) || empty ( $_REQUEST ['to' . $l_den . $l_idx2] ) ) {
@@ -123,7 +124,7 @@ if ( isset ( $_REQUEST ['radiatorsettings'] ) ) {
 				$l_radiator [$l_den] [$l_idx2] = array ('from' => $_REQUEST ['from' . $l_den . $l_idx2], 'to' => $_REQUEST ['to' . $l_den . $l_idx2] );
 			}
 		}
-		
+
 		$l_radiator ['conf'] = 'modified';
 	}
 	unset ( $l_radiator );
@@ -137,17 +138,17 @@ if ( isset ( $_REQUEST ['radiatornextday'] ) ) {
 	else {
 		$l_radiators = array ($_SESSION ['radiator'] );
 	}
-	
+
 	$l_def = array_keys ( $l_dny );
 	$l_dalsiden = $l_def [array_search ( $_REQUEST ['radiatornextdayX'], $l_def ) + 1];
-	
+
 	foreach ( $l_radiators as $l_idx ) {
 		unset ( $l_radiator );
 		$l_radiator = &  $GLOBALS ['heating'] ['radiators'] [$l_idx];
 		foreach ( array (0, 1, 2, 3 ) as $l_radek ) {
 			$l_radiator [$l_dalsiden] [$l_radek] = array ('from' => $_REQUEST ['from' . $_REQUEST ['radiatornextdayX'] . $l_radek], 'to' => $_REQUEST ['to' . $_REQUEST ['radiatornextdayX'] . $l_radek] );
 		}
-		
+
 		$l_radiator ['conf'] = 'modified';
 	}
 	unset ( $l_radiator );
@@ -157,21 +158,20 @@ if ( isset ( $_REQUEST ['radiatornextday'] ) ) {
 if ( isset ( $_REQUEST ['radiatorcopy'] ) ) {
 	unset ( $l_radiator );
 	$l_radiator = & $GLOBALS ['heating'] ['radiators'] [$_REQUEST ['radiatorcopy']];
-	
+
 	unset ( $l_radiator1 );
 	$l_radiator1 = & $GLOBALS ['heating'] ['radiators'] [$_SESSION ['radiator']];
-	
-	
+
 	foreach ( array ('required', 'night', 'comfort', 'offset' ) as $l_definition ) {
 		$l_radiator [$l_definition] = $l_radiator1 [$l_definition];
 	}
-	
+
 	foreach ( array ("pondeli", "utery", "streda", "ctvrtek", "patek", "sobota", "nedele" ) as $l_den ) {
 		for ( $l_idx2 = 0; $l_idx2 < 4; $l_idx2 ++ ) {
 			$l_radiator [$l_den] [$l_idx2] = $l_radiator1 [$l_den] [$l_idx2];
 		}
 	}
-	
+
 	$l_radiator ['conf'] = 'modified';
 	unset ( $l_radiator );
 	unset ( $l_radiator1 );
@@ -179,22 +179,22 @@ if ( isset ( $_REQUEST ['radiatorcopy'] ) ) {
 
 // Ma se nastaveni zdroje tepla
 if ( isset ( $_REQUEST ['sourcesettings'] ) ) {
-	
+
 	// Jednotlive radiatory
 	unset ( $l_source );
-	$l_source = &  $GLOBALS ['heating'] ['sources'] [$_SESSION ['source']];
-	
+	$l_source = &  source_getbyname ( $_SESSION ['source'] );
+
 	// Nastaveni kdo zapina zdroj
 	$l_source ['controledby'] = $_REQUEST ['controled'];
-	
+
 	$l_source ['type'] = $_REQUEST ['type'];
 	$l_source ['type_params'] = $_REQUEST ['type_params'];
-	
+
 	// Nastaveni kdo vytapi radiator
 	foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
 		unset ( $l_radiator );
 		$l_radiator = &  $GLOBALS ['heating'] ['radiators'] [$l_idx];
-		
+
 		if ( in_array ( $l_idx, $_REQUEST ['powered'] ) ) {
 			! in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] ) && $l_radiator ['poweredby'] [] = $_SESSION ['source'];
 		}
@@ -265,51 +265,51 @@ switch ( $_SESSION ['mode'] ) {
 		echo '<div class="pokoje">';
 		unset ( $l_source );
 		foreach ( $GLOBALS ['heating'] ['sources'] as $l_idx => $l_source ) {
-			echo '<input type="button" value="', htmlspecialchars ( $l_source ['name'] ), '" onclick="document.location.href=\'?source=', $l_idx, '\';">';
+			echo '<input type="button" value="', htmlspecialchars ( $l_source ['name'] ), '" onclick="document.location.href=\'?source=', $l_source ['name'], '\';">';
 		}
 		echo '</div>';
 		echo '<div class="radiatorconfig">';
-		$l_source = $GLOBALS ['heating'] ['sources'] [$_SESSION ['source']];
+		$l_source = source_getbyname($_SESSION ['source']);
 		echo '<div style="text-align:center;"><h1>', htmlspecialchars ( $l_source ['name'] ), '</h1></div>';
-		
+
 		echo '<div class="panel setting">';
 		echo '<div class="label">Zdroj pro</div>';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
 			echo '<label>', htmlspecialchars ( $l_radiator ['name'] ), '</label>';
-			echo '<input type="checkbox" value="', $l_idx, '" name="powered[]" ', ((in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] )) ? 'checked' : ''), '>';
+			echo '<input type="checkbox" value="', $l_radiator ['name'], '" name="powered[]" ', ((in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] )) ? 'checked' : ''), '>';
 			echo '<br>';
 		}
 		echo '</div>';
-		
+
 		echo '<div class="panel setting">';
 		echo '<div class="label">Jsem ovládaný</div>';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
 			echo '<label>', htmlspecialchars ( $l_radiator ['name'] ), '</label>';
-			echo '<input type="checkbox" value="', $l_idx, '" name="controled[]" ', ((in_array ( $l_idx, $l_source ['controledby'] )) ? 'checked' : ''), '>';
+			echo '<input type="checkbox" value="', $l_radiator ['name'], '" name="controled[]" ', ((in_array ( $l_radiator ['name'], $l_source ['controledby'] )) ? 'checked' : ''), '>';
 			echo '<br>';
 		}
 		echo '</div>';
-		
+
 		echo '<div class="panel setting">';
 		echo '<div class="label">Typ</div>';
 		echo '<label>Typ</label>';
 		echo '<select name="type">';
-		foreach ( array ("BT-04A", "ESP8266" ) as $l_type ) {
+		foreach ( array ("BT-04A", "ESP8266","EASYESP8266" ) as $l_type ) {
 			echo '<option value="', $l_type, '" ', (($l_type == $l_source ['type']) ? 'selected' : ''), '>', htmlspecialchars ( $l_type ), '</option>';
 		}
 		echo '</select>';
 		echo '<label>Nastavení</label>';
 		echo '<input type="text" name="type_params" value="', $l_source ['type_params'], '" >';
-		
+
 		echo '</div>';
-		
+
 		echo '<div style="text-align:center;"><input type="submit" name="sourcesettings" value="Uložit"></div>';
-		
+
 		// Konec vseho
 		echo '</div>';
-		
+
 		break;
-	
+
 	// Dovolena
 	case 1 :
 		// Z prniho radiatoru nacti dovolenou
@@ -323,20 +323,20 @@ switch ( $_SESSION ['mode'] ) {
 		echo '<input type="submit" name="dovolenadel" value="Vymazat">';
 		echo '</div>';
 		break;
-	
+
 	// Planovani
 	case 0 :
 		echo '<input type="hidden" id="radiatornextdayX" name="radiatornextdayX" value="" >';
-		
+
 		echo '<div class="pokoje">';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
 			echo '<input type="button" value="', htmlspecialchars ( $l_radiator ['name'] ), '" onclick="document.location.href=\'?radiator=', $l_idx, '\';">';
 		}
 		echo '<input type="button" value="Všechny" onclick="document.location.href=\'?radiator=-1\';">';
 		echo '</div>';
-		
+
 		echo '<div class="radiatorconfig">';
-		
+
 		// Tydenni planovani?
 		if ( $_SESSION ['radiator'] != - 1 ) {
 			$l_radiator = $GLOBALS ['heating'] ['radiators'] [$_SESSION ['radiator']];
@@ -345,7 +345,7 @@ switch ( $_SESSION ['mode'] ) {
 		else {
 			$l_radiator = array ();
 		}
-		
+
 		?>
 		<div class="panel setting">
 		<div class="label">Teploty</div>
@@ -375,17 +375,17 @@ switch ( $_SESSION ['mode'] ) {
 				echo '<input type="text" name="to', $l_den, $l_idx2, '" value="">';
 				echo "<br>";
 			}
-			
+
 			// kopirovani do dalsiho dne
 			if ( $l_den !== 'nedele' ) {
 				echo '<div style="text-align:center;"><input type="submit" name="radiatornextday" value=">>" onclick="document.getElementById(\'radiatornextdayX\').value=\'', $l_den, '\';"></div>';
 			}
-			
+
 			echo '</div>';
 		}
-		
+
 		echo '<div style="text-align:center;"><input type="submit" name="radiatorsettings" value="Uložit"></div>';
-		
+
 		// Kopirovani do statnich radiatoru
 		echo '<div class="pokoje">';
 		foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
@@ -395,9 +395,9 @@ switch ( $_SESSION ['mode'] ) {
 			echo '<input type="button" value="', htmlspecialchars ( $l_radiator ['name'] ), '" onclick="document.location.href=\'?radiatorcopy=', $l_idx, '\';">';
 		}
 		echo '</div>';
-		
+
 		echo '</div>';
-		
+
 		break;
 }
 

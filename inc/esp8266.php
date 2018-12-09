@@ -36,6 +36,7 @@ function esp8266_wait ( $a_index ) {
 				stream_set_blocking ( $GLOBALS ['esp_servers'] [$a_index] [1], false );
 			}
 			else {
+				stream_set_blocking ( $l_readedsockets [$i], false );
 				fread ( $l_readedsockets [$i], 1000 );
 			}
 		}
