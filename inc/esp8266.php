@@ -5,7 +5,7 @@ function esp8266_init ( $a_index ) {
 		return;
 	}
 	$GLOBALS ['esp_servers'] [$a_index] [0] = stream_socket_server ( "tcp://0.0.0.0:550" . $a_index, $errno, $errstr );
-	
+
 	if ( ! is_resource ( $GLOBALS ['esp_servers'] [$a_index] [0] ) ) {
 		throw new Exception ( "$errstr ($errno)" );
 	}
@@ -15,16 +15,16 @@ function esp8266_wait ( $a_index ) {
 	if ( ! is_resource ( $GLOBALS ['esp_servers'] [$a_index] [0] ) ) {
 		esp8266_init ( $a_index );
 	}
-	
+
 	$l_pocetzmen = 1;
-	
+
 	while ( $l_pocetzmen > 0 ) {
-		
+
 		$l_readedsockets = $GLOBALS ['esp_servers'] [$a_index];
 		$l_pocetzmen = stream_select ( $l_readedsockets, $_w = NULL, $_e = NULL, 1 );
-		
+
 		for ( $i = 0; $i < $l_pocetzmen; ++ $i ) {
-			
+
 			if ( $l_readedsockets [$i] === $GLOBALS ['esp_servers'] [$a_index] [0] ) {
 				if ( is_resource ( $GLOBALS ['esp_servers'] [$a_index] [1] ) ) {
 					fclose ( $GLOBALS ['esp_servers'] [$a_index] [1] );
@@ -44,16 +44,16 @@ function esp8266_wait ( $a_index ) {
 
 function esp8266_switch_on ( $a_index ) {
 	esp8266_wait ( $a_index );
-	
-	while ( 4 !== fwrite ( $GLOBALS ['esp_servers'] [$a_index] [1], base64_decode ( "oAEBog==" ) ) ) {
+
+	while ( is_resource( $GLOBALS ['esp_servers'] [$a_index] [1]) && 4 !== fwrite ( $GLOBALS ['esp_servers'] [$a_index] [1], base64_decode ( "oAEBog==" ) ) ) {
 		esp8266_wait ( $a_index );
 	}
 }
 
 function esp8266_switch_off ( $a_index ) {
 	esp8266_wait ( $a_index );
-	
-	while ( 4 !== fwrite ( $GLOBALS ['esp_servers'] [$a_index] [1], base64_decode ( "oAEAoQ==" ) ) ) {
+
+	while (  is_resource( $GLOBALS ['esp_servers'] [$a_index] [1]) &&  4 !== fwrite ( $GLOBALS ['esp_servers'] [$a_index] [1], base64_decode ( "oAEAoQ==" ) ) ) {
 		esp8266_wait ( $a_index );
 	}
 }

@@ -43,3 +43,19 @@ function radiators_load () {
 	semdown ();
 	$GLOBALS ['heating'] = json_decode ( file_get_contents ( $GLOBALS ['logs'] . 'radiators.json' ), true );
 }
+
+
+/**
+ * Vrati radiator podle jmena
+ *
+ * @param string $a_name
+ * @return unknown|boolean
+ */
+function & radiator_getbyname($a_name) {
+	foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
+		if ( $GLOBALS ['heating'] ['radiators'] [$l_idx]['name'] == $a_name ) {
+			return $GLOBALS ['heating'] ['radiators'] [$l_idx];
+		}
+	}
+	return false;
+}
