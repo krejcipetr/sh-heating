@@ -195,7 +195,7 @@ if ( isset ( $_REQUEST ['sourcesettings'] ) ) {
 		unset ( $l_radiator );
 		$l_radiator = &  $GLOBALS ['heating'] ['radiators'] [$l_idx];
 
-		if ( in_array ( $l_idx, $_REQUEST ['powered'] ) ) {
+		if ( in_array ( $l_radiator['name'], $_REQUEST ['powered'] ) ) {
 			! in_array ( $_SESSION ['source'], $l_radiator ['poweredby'] ) && $l_radiator ['poweredby'] [] = $_SESSION ['source'];
 		}
 		else {
