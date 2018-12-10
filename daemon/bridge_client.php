@@ -24,11 +24,15 @@ while ( ! $GLOBALS ['stop'] ) {
 
     $l_minutes = INTERVAL * 60 + time ();
 	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_minutes ) );
-	while ( time () < $l_minutes ) {
+	while ( ! $GLOBALS ['stop'] &&  time () < $l_minutes ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
 		sleep ( 1 );
 	}
-	
+
+	if ( $GLOBALS ['stop'] ) {
+		continue;
+	}
+
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 
 	fprintf(STDOUT, "Reading radiators".PHP_EOL);

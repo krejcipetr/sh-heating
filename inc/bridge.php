@@ -4,6 +4,7 @@ require_once 'sem.php';
 function bridgemaster_connect () {
 	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ();
 	$GLOBALS ['bridge'] ['client']->onMessage ( 'bridge_message' );
+	$GLOBALS ['bridge'] ['client']->setWill($GLOBALS ['bridge'] ['id'].'/stop', "", 1, 0);
 	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 300 );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/ready', 1 );
@@ -17,7 +18,7 @@ function bridgeclient_connect () {
 	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 300 );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/config', 1 );
-	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/stop', 1 );
+	$GLOBALS ['bridge'] ['client']->subscribe (  '+/stop', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/source_set/#', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/radiator_reconfigure/#', 1 );
 
@@ -138,7 +139,8 @@ function bridge_message ( $message ) {
 			break;
 
 		case 'stop' :
-			$GLOBALS ['bridge'] ['stop'] = true;
+			fprintf ( STDOUT, "MQTT: Got stop request [%s]" . PHP_EOL, $l_casti [0]);
+			$GLOBALS ['stop'] = true;
 			break;
 
 		case 'ready' :
@@ -153,7 +155,7 @@ function bridge_message ( $message ) {
 }
 
 function bridge_disconnect () {
-	echo "Disconnected cleanly\n";
+	$GLOBALS ['bridge'] ['client']->unsubscribe('#');
 }
 
 function bridge_logger () {
