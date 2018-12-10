@@ -22,9 +22,9 @@ $GLOBALS ['stop'] = false;
 
 while ( ! $GLOBALS ['stop'] ) {
 
-    $l_minutes = INTERVAL * 60 + time ();
-	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_minutes ) );
-	while ( ! $GLOBALS ['stop'] &&  time () < $l_minutes ) {
+	$GLOBALS['synchro']  = INTERVAL * 60 + time ();
+	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $GLOBALS['synchro'] ) );
+	while ( ! $GLOBALS ['stop'] &&  time () < $GLOBALS['synchro'] ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
 		sleep ( 1 );
 	}

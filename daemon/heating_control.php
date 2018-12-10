@@ -39,21 +39,21 @@ foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
 	}
 }
 printf ( "End" . PHP_EOL );
-radiators_save ();
 
 // ridici cyklus
 while ( true ) {
-
+	/* URCENI DALSIHO CASU ZPRACOVANI */
+	$l_next = time () + 60 * INTERVAL;
+	$GLOBALS ['heating'] ['next'] = strftime ( "%x %X", $l_next );
+	radiators_save ();
+	$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge']['id']  . '/synchro' , json_encode ( $l_next ) );
+	
 	// cekam na dalsi cyklus - bud vypsi doba, nebo se objevi soubor fastfile
-	$l_minutes = INTERVAL * 60 + time ();
-	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_minutes ) );
+	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_next ) );
     file_exists ( fastfile ) && unlink ( fastfile );
-	while ( ! file_exists ( fastfile ) && time () < $l_minutes ) {
+    while ( time () < $l_next ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
-		sleep ( 1 );
-	}
-	if ( file_exists ( fastfile ) ) {
-		printf ( "Fast detected" . PHP_EOL );
+		sleep ( 5 );
 	}
 
 	// Nacteni stavu
@@ -244,15 +244,6 @@ while ( true ) {
 
 	// Vypsani na vystup
 	printf ( PHP_EOL . PHP_EOL . $l_message_subjectreport );
-
-	/* URCENI DALSIHO CASU ZPRACOVANI */
-
-	$l_next = time () + 60 * INTERVAL;
-	$GLOBALS ['heating'] ['next'] = strftime ( "%x %X", $l_next );
-
-	// Prubezne ulozeni
-	radiators_save ();
-
 }
 
 bridge_disconnect ();

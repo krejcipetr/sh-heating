@@ -18,10 +18,12 @@ function bridgeclient_connect () {
 	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 300 );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/config', 1 );
-	$GLOBALS ['bridge'] ['client']->subscribe (  '+/stop', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/source_set/#', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/radiator_reconfigure/#', 1 );
-
+	
+	$GLOBALS ['bridge'] ['client']->subscribe (  '+/stop', 1 );
+	$GLOBALS ['bridge'] ['client']->subscribe (  '+/synchro', 1 );
+	
 	$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/ready", "", 2, 1 );
 }
 
@@ -138,6 +140,12 @@ function bridge_message ( $message ) {
 			}
 			break;
 
+		case 'synchro' :
+			fprintf ( STDOUT, "MQTT: New time of synchronization [%s]" . PHP_EOL, $l_casti [0]);
+			
+			$GLOBALS ['synchro'] = intval($l_config) - 20 * count($GLOBALS['heating']['radiators']);
+			break;
+			
 		case 'stop' :
 			fprintf ( STDOUT, "MQTT: Got stop request [%s]" . PHP_EOL, $l_casti [0]);
 			$GLOBALS ['stop'] = true;
