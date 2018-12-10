@@ -22,11 +22,14 @@ $GLOBALS ['stop'] = false;
 
 while ( ! $GLOBALS ['stop'] ) {
 
-	// Zpracuj smicku
-	for ( $i = 0; $i < INTERVAL * 60; $i ++ ) {
+    $l_minutes = INTERVAL * 60 + time ();
+	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_minutes ) );
+	while ( time () < $l_minutes ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
 		sleep ( 1 );
 	}
+	
+	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 
 	fprintf(STDOUT, "Reading radiators".PHP_EOL);
 

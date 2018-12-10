@@ -8,20 +8,57 @@ require_once 'inc/source.php';
 
 radiators_load ();
 
-if (! $argv[1]) {
+if ( ! $argv [1] ) {
 	$l_configfile = 'bridge.json';
 }
 else {
-	$l_configfile = $argv[1];
+	$l_configfile = $argv [1];
 }
 
-bridge_load ($l_configfile);
-
+bridge_load ( $l_configfile );
 // Pripojuji se na vse
-bridgemaster_connect ( );
+bridgemaster_connect ();
+
+printf ( "\nInicialize state of radiators\n" );
+radiators_load ();
+foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
+	unset ( $l_radiator );
+	$l_radiator = & $GLOBALS ['heating'] ['radiators'] [$l_idx];
+
+	if ( isset ( $l_radiator ['control'] ) ) {
+		continue;
+	}
+
+	$l_radiator ['control'] ['curr_from'] = time ();
+	$l_radiator ['control'] ['direction'] = $l_radiator['required']>$l_radiator['night'];
+	$l_radiator ['control'] ['heating'] = false;
+
+	// Urceni stavu vytapeni podle zdroju
+	foreach ( $l_radiator ['poweredby'] as $l_sourceidx ) {
+		$l_radiator ['control'] ['heating'] |= $GLOBALS ['sources'] [$l_sourceidx] ['state'];
+	}
+}
+printf ( "End" . PHP_EOL );
+radiators_save ();
 
 // ridici cyklus
 while ( true ) {
+
+	// cekam na dalsi cyklus - bud vypsi doba, nebo se objevi soubor fastfile
+	$l_minutes = INTERVAL * 60 + time ();
+	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_minutes ) );
+    file_exists ( fastfile ) && unlink ( fastfile );
+	while ( ! file_exists ( fastfile ) && time () < $l_minutes ) {
+		$GLOBALS ['bridge'] ['client']->loop ();
+		sleep ( 1 );
+	}
+	if ( file_exists ( fastfile ) ) {
+		printf ( "Fast detected" . PHP_EOL );
+	}
+
+	// Nacteni stavu
+	radiators_load ();
+
 	// Inicializace pres kazdym krokem
 	$l_lowbattery = array ();
 	$l_day = mktime ( 0, 0, 0 );
@@ -29,9 +66,6 @@ while ( true ) {
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 
 	$l_radiators = array_keys ( $GLOBALS ['heating'] ['radiators'] );
-
-	// Nacteni stavu
-	radiators_load ();
 
 	$l_radiatorssave = array ();
 
@@ -46,8 +80,9 @@ while ( true ) {
 		// Zapamatovat co ukladam
 		$l_radiatorssave [] = $l_idx;
 
-		$l_json = json_encode($l_radiator);
-		$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/radiator_reconfigure/' . $l_radiator ['name'] , $l_json );
+		$l_json = json_encode ( $l_radiator );
+		$GLOBALS ['bridge'] ['client']->publish ( $l_radiator ['bridge'] . '/radiator_reconfigure/' . $l_radiator ['name'], $l_json );
+		printf("Sent new configuration [%s]", $l_radiator ['name']);
 	}
 
 	// Budu zpracovavat pouze nove ulozene radiatory, ostatni necham
@@ -61,7 +96,7 @@ while ( true ) {
 		unset ( $l_radiator );
 		$l_radiator = & $GLOBALS ['heating'] ['radiators'] [$l_idx];
 
-		echo $l_radiator ['mac'], '=', $l_radiator ['name'];
+		echo $l_radiator ['mac'], '=', $l_radiator ['name'], PHP_EOL;
 
 		// Doslo ke zmene hodnoty? Poznamenej si cas zmeny
 		if ( $l_radiator ['current'] != $l_radiator ['previous'] ) {
@@ -72,13 +107,15 @@ while ( true ) {
 		$l_heating_curr = false;
 		foreach ( $l_radiator ['poweredby'] as $l_idx ) {
 			unset ( $l_source );
-			$l_source = & source_getbyname($l_idx);
+			$l_source = & source_getbyname ( $l_idx );
 			$l_heating_curr |= $l_source ['state'];
 		}
 
 		$l_heating = false;
 
 		/* URCENI DALSIHO BEHU, FUZZY CONTROLLER */
+
+		echo $l_radiator ['required'], $l_radiator ['requiredprevious'], PHP_EOL;
 
 		// Meni se smer?
 		if ( $l_radiator ['requiredprevious'] != $l_radiator ['required'] ) {
@@ -90,7 +127,7 @@ while ( true ) {
 			// Teplota se zvedla, tak top
 			if ( $l_radiator ['control'] ['direction'] ) {
 				$l_heating = true;
-				$l_radiator ['control'] ['state'] = sprintf ( 'heating-requp-zmena teploty na vyssi %s->%s', $l_radiator ['requiredprevious'], $l_radiator['required'] );
+				$l_radiator ['control'] ['state'] = sprintf ( 'heating-requp-zmena teploty na vyssi %s->%s', $l_radiator ['requiredprevious'], $l_radiator ['required'] );
 			}
 			else {
 				$l_heating = false;
@@ -140,7 +177,7 @@ while ( true ) {
 		$l_radiator ['previous'] = $l_radiator ['current'];
 
 		if ( $l_radiator ['battery'] < BATTERY_LIMIT ) {
-			$l_lowbattery [] = $l_radiator ['mac'] ."-" . $l_radiator ['name'] . "-" . $l_radiator ['battery'];
+			$l_lowbattery [] = $l_radiator ['mac'] . "-" . $l_radiator ['name'] . "-" . $l_radiator ['battery'];
 		}
 	}
 
@@ -152,13 +189,12 @@ while ( true ) {
 		$l_state = false;
 		foreach ( $l_source ['controledby'] as $l_idx ) {
 			unset ( $l_radiator );
-			$l_radiator = & radiator_getbyname($l_idx);
+			$l_radiator = & radiator_getbyname ( $l_idx );
 			$l_state |= $l_radiator ['control'] ['heating'];
 		}
 
-		$l_json = json_encode($l_state);
-		$GLOBALS ['bridge'] ['client']->publish ( $l_radiator['bridge']. '/source_set/' . $l_source ['name'] , $l_json );
-
+		$l_json = json_encode ( $l_state );
+		$GLOBALS ['bridge'] ['client']->publish ( $l_radiator ['bridge'] . '/source_set/' . $l_source ['name'], $l_json );
 
 		if ( $l_state != $l_source ['state'] ) {
 			if ( $l_state == false ) {
@@ -217,18 +253,6 @@ while ( true ) {
 	// Prubezne ulozeni
 	radiators_save ();
 
-	printf ( "Next cycle: %s\n", strftime ( "%X", $l_next ) );
-
-	// cekam na dalsi cyklus - bud vypsi doba, nebo se objevi soubor fastfile
-	$l_minutes = INTERVAL *60 + time();
-	file_exists ( fastfile ) && unlink ( fastfile );
-	while ( ! file_exists ( fastfile ) && time() < $l_minutes ) {
-		$GLOBALS ['bridge'] ['client']->loop ();
-		sleep ( 1 );
-	}
-	if ( file_exists ( fastfile ) ) {
-		printf ( "Fast detected" . PHP_EOL );
-	}
 }
 
-bridge_disconnect();
+bridge_disconnect ();

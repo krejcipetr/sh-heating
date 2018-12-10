@@ -39,6 +39,8 @@ function bridge_message ( $message ) {
 	$l_casti = explode ( "/", $message->topic );
 	switch ( $l_casti [1] ) {
 		case 'config' :
+			fprintf ( STDOUT, "MQTT: Got configuration ... "  );
+
 			$GLOBALS ['heating'] ['radiators'] = $l_config ['radiators'];
 			$GLOBALS ['heating'] ['sources'] = $l_config ['sources'];
 
@@ -53,14 +55,19 @@ function bridge_message ( $message ) {
 				$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/source_actual/' . $l_source ['name'] , $l_json );
 
 			}
+			fprintf ( STDOUT, "Done" . PHP_EOL );
 			break;
 
 		case 'radiator_actual' :
-			fprintf ( STDOUT, "Actual state of radiator [%s]" . PHP_EOL, $l_casti [2] );
+			fprintf ( STDOUT, "MQTT: Actual state of radiator [%s]" . PHP_EOL, $l_casti [2] );
+
+			radiators_load();
 
 			$l_radiator = & radiator_getbyname ( $l_casti [2] );
 			if ( $l_radiator === false ) {
 				fprintf ( STDERR, "Nenasel se radiator" );
+				semup();
+				return;
 			}
 
 			$l_radiator ['required'] = $l_config ['required'];
@@ -68,43 +75,52 @@ function bridge_message ( $message ) {
 			$l_radiator ['lastdata'] = $l_config ['lastdata'];
 			$l_radiator ['conf'] = $l_config ['conf'];
 
+			radiators_save();
+
 			break;
 
 		case 'radiator_reconfigure' :
-			fprintf ( STDOUT, "Reconfiguration of radiator [%s]" . PHP_EOL, $l_casti [2] );
+			fprintf ( STDOUT, "MQTT: Reconfiguration of radiator [%s] ..." , $l_casti [2] );
 
 			$l_radiator = & radiator_getbyname ( $l_casti [2] );
 			if ( $l_radiator === false ) {
 				fprintf ( STDERR, "Nenasel se radiator" );
 			}
-
-			$l_radiator = $l_config;
+			else {
+				$l_radiator = $l_config;
+			}
 
 			// Nova konfigurace v JSON, ale neni v hlavicich
-			if ( ! cometblue_sendconf ( $l_radiator, PIN ) ) {
+			if ( ! cometblue_sendconf ( $l_config, PIN ) ) {
 				echo "Error", PHP_EOL;
-				continue;
+				return;
 			}
-			$l_radiator ['conf'] = 'saved';
 			echo "OK", PHP_EOL;
+			$l_radiator ['conf'] = 'saved';
 
 			break;
 
 		case 'source_actual' :
-			fprintf ( STDOUT, "Actual state of source [%s]" . PHP_EOL, $l_casti [2] );
+			fprintf ( STDOUT, "MQTT: Actual state of source [%s]" . PHP_EOL, $l_casti [2] );
+
+			radiators_load();
 
 			$l_source = & source_getbyname ( $l_casti [2] );
 			if ( $l_source === false ) {
 				fprintf ( STDERR, "Nenasel se source" );
+				semup();
+				return;
 			}
 
 			$l_source ['state'] = ( bool ) $l_config;
+
+			radiators_save();
 
 			break;
 
 
 		case 'source_set' :
-			fprintf ( STDOUT, "Set source [%s] to %s" . PHP_EOL, $l_casti [2], $l_config);
+			fprintf ( STDOUT, "MQTT: Set source [%s] to %s" . PHP_EOL, $l_casti [2], $l_config);
 			$l_source = & source_getbyname ( $l_casti [2] );
 			if ( $l_source === false ) {
 				fprintf ( STDERR, "Nenasel se source" );
@@ -126,7 +142,12 @@ function bridge_message ( $message ) {
 			break;
 
 		case 'ready' :
+			fprintf ( STDOUT, "MQTT: Welcome [%s]" . PHP_EOL, $l_casti [0]);
+
+			radiators_load();
 			bridge_sendconfiguration ( $l_casti [0] );
+			radiators_save();
+
 			break;
 	}
 }
@@ -162,7 +183,6 @@ function bridge_sendconfiguration ( $a_bridgeid ) {
 	}
 
 	if ( $l_configuration ['radiators'] || $l_configuration ['sources'] ) {
-		fprintf ( STDOUT, "Sending configuration" . PHP_EOL );
 		$GLOBALS ['bridge'] ['client']->publish ( $a_bridgeid . '/config', json_encode ( $l_configuration ) );
 	}
 }
