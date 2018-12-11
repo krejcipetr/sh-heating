@@ -2,28 +2,32 @@
 require_once 'sem.php';
 
 function bridgemaster_connect () {
-	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ();
+	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ( $GLOBALS ['bridge'] ['id'] );
 	$GLOBALS ['bridge'] ['client']->onMessage ( 'bridge_message' );
-	$GLOBALS ['bridge'] ['client']->setWill($GLOBALS ['bridge'] ['id'].'/stop', "", 1, 0);
-	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 300 );
+	//$GLOBALS ['bridge'] ['client']->setWill ( $GLOBALS ['bridge'] ['id'] . '/stop', "", 1, 0 );
+	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 86400 );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/ready', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/radiator_actual/#', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/source_actual/#', 1 );
+    
+    $GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/masterready", "", 2, 1 );
+
 }
 
 function bridgeclient_connect () {
-	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ();
+	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ( $GLOBALS ['bridge'] ['id'] );
 	$GLOBALS ['bridge'] ['client']->onMessage ( 'bridge_message' );
-	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 300 );
+	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 86400 );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/config', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/source_set/#', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( $GLOBALS ['bridge'] ['id'] . '/radiator_reconfigure/#', 1 );
-	
-	$GLOBALS ['bridge'] ['client']->subscribe (  '+/stop', 1 );
-	$GLOBALS ['bridge'] ['client']->subscribe (  '+/synchro', 1 );
-	
+
+	$GLOBALS ['bridge'] ['client']->subscribe ( '+/stop', 1 );
+	$GLOBALS ['bridge'] ['client']->subscribe ( '+/synchro', 1 );
+	$GLOBALS ['bridge'] ['client']->subscribe ( '+/masterready', 1 );
+
 	$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/ready", "", 2, 1 );
 }
 
@@ -41,8 +45,13 @@ function bridge_message ( $message ) {
 	$l_config = json_decode ( $message->payload, true );
 	$l_casti = explode ( "/", $message->topic );
 	switch ( $l_casti [1] ) {
+        case 'masterready' :
+			fprintf ( STDOUT, "MQTT: Got request to Reconfiguration ... " );
+            $GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/ready", "", 2, 1 );
+			break;
+	
 		case 'config' :
-			fprintf ( STDOUT, "MQTT: Got configuration ... "  );
+			fprintf ( STDOUT, "MQTT: Got configuration ... " );
 
 			$GLOBALS ['heating'] ['radiators'] = $l_config ['radiators'];
 			$GLOBALS ['heating'] ['sources'] = $l_config ['sources'];
@@ -54,9 +63,8 @@ function bridge_message ( $message ) {
 				fprintf ( STDOUT, "Initialize source [%s]" . PHP_EOL, $l_source ['name'] );
 				source_init ( $l_source );
 
-				$l_json = source_getstate($l_source);
-				$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/source_actual/' . $l_source ['name'] , $l_json );
-
+				$l_json = source_getstate ( $l_source );
+				$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/source_actual/' . $l_source ['name'], $l_json );
 			}
 			fprintf ( STDOUT, "Done" . PHP_EOL );
 			break;
@@ -64,12 +72,12 @@ function bridge_message ( $message ) {
 		case 'radiator_actual' :
 			fprintf ( STDOUT, "MQTT: Actual state of radiator [%s]" . PHP_EOL, $l_casti [2] );
 
-			radiators_load();
+			radiators_load ();
 
 			$l_radiator = & radiator_getbyname ( $l_casti [2] );
 			if ( $l_radiator === false ) {
 				fprintf ( STDERR, "Nenasel se radiator" );
-				semup();
+				semup ();
 				return;
 			}
 
@@ -78,12 +86,12 @@ function bridge_message ( $message ) {
 			$l_radiator ['lastdata'] = $l_config ['lastdata'];
 			$l_radiator ['conf'] = $l_config ['conf'];
 
-			radiators_save();
+			radiators_save ();
 
 			break;
 
 		case 'radiator_reconfigure' :
-			fprintf ( STDOUT, "MQTT: Reconfiguration of radiator [%s] ..." , $l_casti [2] );
+			fprintf ( STDOUT, "MQTT: Reconfiguration of radiator [%s] ...", $l_casti [2] );
 
 			$l_radiator = & radiator_getbyname ( $l_casti [2] );
 			if ( $l_radiator === false ) {
@@ -106,24 +114,23 @@ function bridge_message ( $message ) {
 		case 'source_actual' :
 			fprintf ( STDOUT, "MQTT: Actual state of source [%s]" . PHP_EOL, $l_casti [2] );
 
-			radiators_load();
+			radiators_load ();
 
 			$l_source = & source_getbyname ( $l_casti [2] );
 			if ( $l_source === false ) {
 				fprintf ( STDERR, "Nenasel se source" );
-				semup();
+				semup ();
 				return;
 			}
 
 			$l_source ['state'] = ( bool ) $l_config;
 
-			radiators_save();
+			radiators_save ();
 
 			break;
 
-
 		case 'source_set' :
-			fprintf ( STDOUT, "MQTT: Set source [%s] to %s" . PHP_EOL, $l_casti [2], $l_config);
+			fprintf ( STDOUT, "MQTT: Set source [%s] to %s" . PHP_EOL, $l_casti [2], $l_config );
 			$l_source = & source_getbyname ( $l_casti [2] );
 			if ( $l_source === false ) {
 				fprintf ( STDERR, "Nenasel se source" );
@@ -141,29 +148,35 @@ function bridge_message ( $message ) {
 			break;
 
 		case 'synchro' :
-			fprintf ( STDOUT, "MQTT: New time of synchronization [%s]" . PHP_EOL, $l_casti [0]);
+			fprintf ( STDOUT, "MQTT: New time of synchronization [%s]" . PHP_EOL, $l_casti [0] );
 			
-			$GLOBALS ['synchro'] = intval($l_config) - 20 * count($GLOBALS['heating']['radiators']);
+			$l_synchro = intval ( $l_config ) - 20 * count ( $GLOBALS ['heating'] ['radiators'] );;
+
+			if ($l_synchro > time()) {
+                $GLOBALS ['synchro'] =  $l_synchro;
+            }
 			break;
-			
+
 		case 'stop' :
-			fprintf ( STDOUT, "MQTT: Got stop request [%s]" . PHP_EOL, $l_casti [0]);
+			fprintf ( STDOUT, "MQTT: Got stop request [%s]" . PHP_EOL, $l_casti [0] );
 			$GLOBALS ['stop'] = true;
 			break;
 
 		case 'ready' :
-			fprintf ( STDOUT, "MQTT: Welcome [%s]" . PHP_EOL, $l_casti [0]);
+			fprintf ( STDOUT, "MQTT: Welcome [%s]" . PHP_EOL, $l_casti [0] );
 
-			radiators_load();
+			radiators_load ();
 			bridge_sendconfiguration ( $l_casti [0] );
-			radiators_save();
+			radiators_save ();
+			
+            $GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge']['id']  . '/synchro' , json_encode ( $GLOBALS ['heating'] ['next'] ) );
 
 			break;
 	}
 }
 
 function bridge_disconnect () {
-	$GLOBALS ['bridge'] ['client']->unsubscribe('#');
+	$GLOBALS ['bridge'] ['client']->unsubscribe ( '#' );
 }
 
 function bridge_logger () {
@@ -195,4 +208,5 @@ function bridge_sendconfiguration ( $a_bridgeid ) {
 	if ( $l_configuration ['radiators'] || $l_configuration ['sources'] ) {
 		$GLOBALS ['bridge'] ['client']->publish ( $a_bridgeid . '/config', json_encode ( $l_configuration ) );
 	}
+	
 }
