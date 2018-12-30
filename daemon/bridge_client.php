@@ -51,15 +51,15 @@ while ( ! $GLOBALS ['stop'] ) {
 			echo "Error", PHP_EOL;
 			continue;
 		}
-		echo "OK", PHP_EOL;
 
 		$l_radiator ['required'] = $l_radiator_now ['required'];
 		$l_radiator ['current'] = $l_radiator_now ['current'];
 		$l_radiator ['lastdata'] = $l_radiator_now ['lastdata'];
 
 		// Odesli informace na MQTT
-		$l_json = json_encode ( $l_radiator );
-		$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/radiator_actual/' . $l_radiator ['name'] , $l_json );
+		bridge_publish( 'radiator_actual/' . $l_radiator ['name'] , $l_radiator );
+	
+		echo "OK", PHP_EOL;
 	}
 }
 

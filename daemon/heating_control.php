@@ -46,7 +46,7 @@ while ( true ) {
 	$l_next = time () + 60 * INTERVAL;
 	$GLOBALS ['heating'] ['next'] = strftime ( "%x %X", $l_next );
 	radiators_save ();
-	$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge']['id']  . '/synchro' , json_encode ( $l_next ) );
+	bridge_publish('synchro', $l_next);
 	
 	// cekam na dalsi cyklus - bud vypsi doba, nebo se objevi soubor fastfile
 	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_next ) );
@@ -80,8 +80,8 @@ while ( true ) {
 		// Zapamatovat co ukladam
 		$l_radiatorssave [] = $l_idx;
 
-		$l_json = json_encode ( $l_radiator );
-		$GLOBALS ['bridge'] ['client']->publish ( $l_radiator ['bridge'] . '/radiator_reconfigure/' . $l_radiator ['name'], $l_json );
+		bridge_publish('radiator_reconfigure/' . $l_radiator ['name'], $l_radiator);
+
 		printf("Sent new configuration [%s]", $l_radiator ['name']);
 	}
 
@@ -186,6 +186,7 @@ while ( true ) {
 		unset ( $l_source );
 		$l_source = & $GLOBALS ['heating'] ['sources'] [$l_idx];
 
+		# urceni noveho stavu
 		$l_state = false;
 		foreach ( $l_source ['controledby'] as $l_idx ) {
 			unset ( $l_radiator );
@@ -193,9 +194,10 @@ while ( true ) {
 			$l_state |= $l_radiator ['control'] ['heating'];
 		}
 
-		$l_json = json_encode ( $l_state );
-		$GLOBALS ['bridge'] ['client']->publish ( $l_radiator ['bridge'] . '/source_set/' . $l_source ['name'], $l_json );
+		// Zverejneni
+		bridge_publish('source_set/' . $l_source ['name'], $l_state);
 
+		// Statisika
 		if ( $l_state != $l_source ['state'] ) {
 			if ( $l_state == false ) {
 				$l_cas = (time () - strtotime ( $l_source ['runningfrom'] )) / 60;

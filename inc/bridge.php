@@ -4,15 +4,15 @@ require_once 'sem.php';
 function bridgemaster_connect () {
 	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ( $GLOBALS ['bridge'] ['id'] );
 	$GLOBALS ['bridge'] ['client']->onMessage ( 'bridge_message' );
-	//$GLOBALS ['bridge'] ['client']->setWill ( $GLOBALS ['bridge'] ['id'] . '/stop', "", 1, 0 );
+	// $GLOBALS ['bridge'] ['client']->setWill ( $GLOBALS ['bridge'] ['id'] . '/stop', "", 1, 0 );
 	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 86400 );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/ready', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/radiator_actual/#', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( '+/source_actual/#', 1 );
-    
-    $GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/masterready", "", 2, 1 );
+	$GLOBALS ['bridge'] ['client']->subscribe ( '+/status/LWT', 1 );
 
+	$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/masterready", "", 2, 1 );
 }
 
 function bridgeclient_connect () {
@@ -45,11 +45,11 @@ function bridge_message ( $message ) {
 	$l_config = json_decode ( $message->payload, true );
 	$l_casti = explode ( "/", $message->topic );
 	switch ( $l_casti [1] ) {
-        case 'masterready' :
+		case 'masterready' :
 			fprintf ( STDOUT, "MQTT: Got request to Reconfiguration ... " );
-            $GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/ready", "", 2, 1 );
+			$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . "/ready", "", 2, 1 );
 			break;
-	
+
 		case 'config' :
 			fprintf ( STDOUT, "MQTT: Got configuration ... " );
 
@@ -148,13 +148,13 @@ function bridge_message ( $message ) {
 			break;
 
 		case 'synchro' :
-			fprintf ( STDOUT, "MQTT: New time of synchronization [%s]" . PHP_EOL, $l_casti [0] );
-			
-			$l_synchro = intval ( $l_config ) - 20 * count ( $GLOBALS ['heating'] ['radiators'] );;
+			fprintf ( STDOUT, "MQTT: New time of synchronization [%s] to %s" . PHP_EOL, $l_casti [0], strftime ( "%X", $l_config ) );
 
-			if ($l_synchro > time()) {
-                $GLOBALS ['synchro'] =  $l_synchro;
-            }
+			$l_synchro = intval ( $l_config ) - 20 * count ( $GLOBALS ['heating'] ['radiators'] );
+
+			if ( $l_synchro > time () ) {
+				$GLOBALS ['synchro'] = $l_synchro;
+			}
 			break;
 
 		case 'stop' :
@@ -168,8 +168,8 @@ function bridge_message ( $message ) {
 			radiators_load ();
 			bridge_sendconfiguration ( $l_casti [0] );
 			radiators_save ();
-			
-            $GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge']['id']  . '/synchro' , json_encode ( $GLOBALS ['heating'] ['next'] ) );
+
+			$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/synchro', json_encode ( $GLOBALS ['heating'] ['next'] ) );
 
 			break;
 	}
@@ -208,5 +208,8 @@ function bridge_sendconfiguration ( $a_bridgeid ) {
 	if ( $l_configuration ['radiators'] || $l_configuration ['sources'] ) {
 		$GLOBALS ['bridge'] ['client']->publish ( $a_bridgeid . '/config', json_encode ( $l_configuration ) );
 	}
-	
+}
+
+function bridge_publish ( $a_func, $a_payload ) {
+	$GLOBALS ['bridge'] ['client']->publish ( $GLOBALS ['bridge'] ['id'] . '/' . $a_func, json_encode ( $a_payload ) );
 }
