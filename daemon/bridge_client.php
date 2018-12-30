@@ -2,6 +2,7 @@
 chdir ( dirname ( __FILE__ ) . '/..' );
 
 require_once 'config.php';
+
 require_once 'inc/bridge.php';
 require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
@@ -20,11 +21,13 @@ bridgeclient_connect ();
 
 $GLOBALS ['stop'] = false;
 
+$GLOBALS['synchro']  = INTERVAL * 60 + time ();
+
 while ( ! $GLOBALS ['stop'] ) {
 
-	$GLOBALS['synchro']  = INTERVAL * 60 + time ();
+    $GLOBALS ['now']  = 0;
 	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $GLOBALS['synchro'] ) );
-	while ( ! $GLOBALS ['stop'] &&  time () < $GLOBALS['synchro'] ) {
+	while ( ! $GLOBALS ['now'] &&  ! $GLOBALS ['stop'] &&  time () < $GLOBALS['synchro'] ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
 		sleep ( 1 );
 	}
@@ -33,6 +36,10 @@ while ( ! $GLOBALS ['stop'] ) {
 		continue;
 	}
 
+	if (! $GLOBALS ['now'] ) {
+        $GLOBALS['synchro']  = INTERVAL * 60 + time ();
+    }
+	
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 
 	fprintf(STDOUT, "Reading radiators".PHP_EOL);
@@ -51,6 +58,7 @@ while ( ! $GLOBALS ['stop'] ) {
 			echo "Error", PHP_EOL;
 			continue;
 		}
+		echo "OK", PHP_EOL;
 
 		$l_radiator ['required'] = $l_radiator_now ['required'];
 		$l_radiator ['current'] = $l_radiator_now ['current'];

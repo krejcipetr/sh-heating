@@ -30,7 +30,7 @@ foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
 	}
 
 	$l_radiator ['control'] ['curr_from'] = time ();
-	$l_radiator ['control'] ['direction'] = $l_radiator['required']>$l_radiator['night'];
+	$l_radiator ['control'] ['direction'] = $l_radiator ['required'] > $l_radiator ['night'];
 	$l_radiator ['control'] ['heating'] = false;
 
 	// Urceni stavu vytapeni podle zdroju
@@ -46,14 +46,40 @@ while ( true ) {
 	$l_next = time () + 60 * INTERVAL;
 	$GLOBALS ['heating'] ['next'] = strftime ( "%x %X", $l_next );
 	radiators_save ();
-	bridge_publish('synchro', $l_next);
-	
+	bridge_publish('synchro', $GLOBALS ['heating'] ['next']);
+
+	// saving timeout
+	$l_savinigtime = time () + 60;
+
 	// cekam na dalsi cyklus - bud vypsi doba, nebo se objevi soubor fastfile
-	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $l_next ) );
-    file_exists ( fastfile ) && unlink ( fastfile );
-    while ( time () < $l_next ) {
+	printf ( "Processing MQTT to %s" . PHP_EOL, $GLOBALS ['heating'] ['next'] );
+	file_exists ( fastfile ) && unlink ( fastfile );
+	while ( time () < $l_next && ! file_exists ( fastfile ) ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
-		sleep ( 5 );
+
+		if ( time () > $l_savinigtime ) {
+			radiators_load ();
+
+			// Test, zda-li se maji aktualizovat nastaveni v hlavicich
+			foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
+				unset ( $l_radiator );
+				$l_radiator = & $GLOBALS ['heating'] ['radiators'] [$l_idx];
+				if ( $l_radiator ['conf'] != 'modified' ) {
+					continue;
+				}
+
+				bridge_publish('radiator_reconfigure/' . $l_radiator ['name'], $l_radiator);
+				printf ( "Sent new configuration [%s]".PHP_EOL, $l_radiator ['name'] );
+
+				$l_radiator ['conf'] = 'saved';
+			}
+
+			radiators_save ();
+
+			$l_savinigtime = time () + 60;
+		}
+
+		sleep ( 1 );
 	}
 
 	// Nacteni stavu
@@ -66,29 +92,6 @@ while ( true ) {
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 
 	$l_radiators = array_keys ( $GLOBALS ['heating'] ['radiators'] );
-
-	$l_radiatorssave = array ();
-
-	// Test, zda-li se maji aktualizovat nastaveni v hlavicich
-	foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
-		unset ( $l_radiator );
-		$l_radiator = & $GLOBALS ['heating'] ['radiators'] [$l_idx];
-		if ( $l_radiator ['conf'] != 'modified' ) {
-			continue;
-		}
-
-		// Zapamatovat co ukladam
-		$l_radiatorssave [] = $l_idx;
-
-		bridge_publish('radiator_reconfigure/' . $l_radiator ['name'], $l_radiator);
-
-		printf("Sent new configuration [%s]", $l_radiator ['name']);
-	}
-
-	// Budu zpracovavat pouze nove ulozene radiatory, ostatni necham
-	if ( $l_radiatorssave ) {
-		$l_radiators = $l_radiatorssave;
-	}
 
 	// Nacteni aktualniho stavu z hlavice a
 	printf ( "Controller\n" );
@@ -194,7 +197,7 @@ while ( true ) {
 			$l_state |= $l_radiator ['control'] ['heating'];
 		}
 
-		// Zverejneni
+		// Nastaveni stavu zdroje
 		bridge_publish('source_set/' . $l_source ['name'], $l_state);
 
 		// Statisika
