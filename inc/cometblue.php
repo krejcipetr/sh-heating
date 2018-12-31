@@ -92,6 +92,7 @@ function dovolena_encode ( $a_definition ) {
 		return implode ( " ", $l_data );
 	}
 
+	$l_p =  '';
 	preg_match ( "/([0-9]{2})\\/([0-9]{2})\\/([0-9]{2}) ([0-9]{2})/", $a_definition ['from'], $l_p );
 
 	$l_data [0] = "0x" . dechex ( $l_p [4] );
@@ -130,7 +131,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 		$l_retry = 3;
 		while ( true ) {
 			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_mac, "at" );
-			if (! is_resource($stream)) {
+			if ( ! is_resource ( $stream ) ) {
 				return false;
 			}
 
@@ -280,7 +281,15 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 	$l_output [] = dovolena_encode ( null );
 
 	// Flags
-	$l_output [] = "0x80 00 00";
+	// BIT_MANUAL = 0x01
+	// BIT_LOCKED = 0x80
+	// BIT_WINDOW = 0x10
+	$l_mode = 0;
+	if ($a_radiator['mode_manual']) {
+		$l_mode |= 0x01;
+	}
+	// Zamcen neni
+	$l_output [] = sprintf("0x%s 00 00", dechex ( $l_mode ));
 
 	// Teploty
 	$a_radiator ['offset'] = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);
@@ -295,8 +304,8 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 		$l_retry = 3;
 		while ( true ) {
-			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_radiator['mac'], "at" );
-			if (! is_resource($stream)) {
+			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_radiator ['mac'], "at" );
+			if ( ! is_resource ( $stream ) ) {
 				return false;
 			}
 			$cases = array (array ("Connecting to device...", "connectionstarted" ) );
@@ -371,7 +380,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 				throw new Exception ( "Chyba" );
 		}
 	} catch ( Exception $e ) {
-		fprintf ( STDERR, $e->getTraceAsString ().PHP_EOL.$e->getMessage() );
+		fprintf ( STDERR, $e->getTraceAsString () . PHP_EOL . $e->getMessage () );
 		fclose ( $stream );
 		return false;
 	}

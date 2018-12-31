@@ -6,6 +6,8 @@ require_once 'inc/bridge.php';
 require_once 'inc/radiator.php';
 require_once 'inc/source.php';
 
+define("RECONFIGUREINTERVAL", 60);
+
 radiators_load ();
 
 if ( ! $argv [1] ) {
@@ -49,7 +51,7 @@ while ( true ) {
 	bridge_publish('synchro', $GLOBALS ['heating'] ['next']);
 
 	// saving timeout
-	$l_savinigtime = time () + 60;
+	$l_savinigtime = time () + RECONFIGUREINTERVAL;
 
 	// cekam na dalsi cyklus - bud vypsi doba, nebo se objevi soubor fastfile
 	printf ( "Processing MQTT to %s" . PHP_EOL, $GLOBALS ['heating'] ['next'] );
@@ -76,7 +78,7 @@ while ( true ) {
 
 			radiators_save ();
 
-			$l_savinigtime = time () + 60;
+			$l_savinigtime = time () + RECONFIGUREINTERVAL;
 		}
 
 		sleep ( 1 );
