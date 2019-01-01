@@ -42,9 +42,9 @@ if (isset($_REQUEST['changestate'])) {
 
 if (isset($_REQUEST['refresh'])) {
     touch(fastfile);
-    sleep(60);
+    sleep(10);
     radiators_load();
-	semup ();
+    semup ();
 }
 
 if ( isset ( $_REQUEST ['changemode'] ) ) {

@@ -36,11 +36,11 @@ function bridge_save () {
 
 function bridge_load ( $a_configfile ) {
 	$l_dir = dirname ( $a_configfile );
-	if ( empty ( $l_dir ) ) {
-		$l_dir = file_get_contents ( $GLOBALS ['logs'] );
+	if ( empty ( $l_dir ) || $l_dir == '.') {
+		$l_dir = $GLOBALS ['logs'] ;
 	}
 
-	$GLOBALS ['bridge'] = json_decode ( $l_dir . "/" . $a_configfile, true );
+	$GLOBALS ['bridge'] = json_decode ( file_get_contents($l_dir . "/" . $a_configfile), true );
 }
 
 /**
@@ -50,7 +50,7 @@ function bridge_load ( $a_configfile ) {
 function bridgemaster_message ( $message ) {
 	$l_config = json_decode ( $message->payload, true );
 	$l_casti = explode ( "/", $message->topic );
-	switch ( $l_casti [1] ) {
+	switch ( $l_casti [0] ) {
 		case 'radiator_actual' :
 			fprintf ( STDOUT, "MQTT: Actual state of radiator [%s]" . PHP_EOL, $l_casti [1] );
 
@@ -116,7 +116,7 @@ function bridgemaster_message ( $message ) {
 function bridgeclient_message ( $message ) {
 	$l_config = json_decode ( $message->payload, true );
 	$l_casti = explode ( "/", $message->topic );
-	switch ( $l_casti [1] ) {
+	switch ( $l_casti [0] ) {
 		case 'masterready' :
 			fprintf ( STDOUT, "MQTT: New master ready" . PHP_EOL );
 			bridge_publish ( "ready/" . $GLOBALS ['bridge'] ['id'], "" );
@@ -192,9 +192,10 @@ function bridgeclient_message ( $message ) {
 			break;
 
 		case 'synchro' :
-			fprintf ( STDOUT, "MQTT: New time of synchronization to %s" . PHP_EOL, strftime ( "%x %X", $l_config ) );
 
 			$l_config = strtotime ( $l_config );
+			
+			fprintf ( STDOUT, "MQTT: New time of synchronization to %s" . PHP_EOL, strftime ( "%x %X", $l_config ) );
 
 			$l_synchro = $l_config - 60 - 20 * count ( $GLOBALS ['heating'] ['radiators'] );
 
