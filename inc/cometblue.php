@@ -1,5 +1,16 @@
 <?php
 
+/*
+ * 		static let manualMode = StatusOptions(rawValue: 1)
+		static let antifrostActive = StatusOptions(rawValue: 1 << 4)
+		static let childlock = StatusOptions(rawValue: 1 << 7)
+		static let motorMoving = StatusOptions(rawValue: 1 << 8)
+		static let notReady = StatusOptions(rawValue: 1 << 9)
+		static let adapting = StatusOptions(rawValue: 1 << 10)
+		static let lowBattery = StatusOptions(rawValue: 1 << 11)
+		static let tempSatisfied = StatusOptions(rawValue: 1 << 19)
+		*/
+
 /**
  * Dekofuje vytapeni jednoho dne z konfigurace hlavice
  *

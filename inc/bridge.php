@@ -106,6 +106,46 @@ function bridgemaster_message ( $message ) {
 			bridge_publish ( 'synchro', $GLOBALS ['heating'] ['next'] );
 
 			break;
+
+		case  'up':
+			fprintf ( STDOUT, "MQTT: Request for heating radiator [%s]" . PHP_EOL, $l_casti [1] );
+
+			radiators_load ();
+
+			$l_radiator = & radiator_getbyname ( $l_casti [1] );
+			if ( $l_radiator === false ) {
+				fprintf ( STDERR, "Nenasel se radiator" );
+				semup ();
+				return;
+			}
+
+			$l_radiator ['current'] = $l_radiator ['comfort'];
+			$l_radiator ['conf']  = 'modified';
+
+			radiators_save ();
+
+			break;
+
+		case  'down':
+			fprintf ( STDOUT, "MQTT: Request for heating radiator [%s]" . PHP_EOL, $l_casti [1] );
+
+			radiators_load ();
+
+			$l_radiator = & radiator_getbyname ( $l_casti [1] );
+			if ( $l_radiator === false ) {
+				fprintf ( STDERR, "Nenasel se radiator" );
+				semup ();
+				return;
+			}
+
+			$l_radiator ['current'] = $l_radiator ['night'];
+			$l_radiator ['conf']  = 'modified';
+
+			radiators_save ();
+
+			break;
+
+
 	}
 }
 
@@ -194,7 +234,7 @@ function bridgeclient_message ( $message ) {
 		case 'synchro' :
 
 			$l_config = strtotime ( $l_config );
-			
+
 			fprintf ( STDOUT, "MQTT: New time of synchronization to %s" . PHP_EOL, strftime ( "%x %X", $l_config ) );
 
 			$l_synchro = $l_config - 60 - 20 * count ( $GLOBALS ['heating'] ['radiators'] );
