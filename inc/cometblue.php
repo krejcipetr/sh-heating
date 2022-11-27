@@ -1,15 +1,15 @@
 <?php
 
 /*
- * 		static let manualMode = StatusOptions(rawValue: 1)
-		static let antifrostActive = StatusOptions(rawValue: 1 << 4)
-		static let childlock = StatusOptions(rawValue: 1 << 7)
-		static let motorMoving = StatusOptions(rawValue: 1 << 8)
-		static let notReady = StatusOptions(rawValue: 1 << 9)
-		static let adapting = StatusOptions(rawValue: 1 << 10)
-		static let lowBattery = StatusOptions(rawValue: 1 << 11)
-		static let tempSatisfied = StatusOptions(rawValue: 1 << 19)
-		*/
+ * static let manualMode = StatusOptions(rawValue: 1)
+ * static let antifrostActive = StatusOptions(rawValue: 1 << 4)
+ * static let childlock = StatusOptions(rawValue: 1 << 7)
+ * static let motorMoving = StatusOptions(rawValue: 1 << 8)
+ * static let notReady = StatusOptions(rawValue: 1 << 9)
+ * static let adapting = StatusOptions(rawValue: 1 << 10)
+ * static let lowBattery = StatusOptions(rawValue: 1 << 11)
+ * static let tempSatisfied = StatusOptions(rawValue: 1 << 19)
+ */
 
 /**
  * Dekofuje vytapeni jednoho dne z konfigurace hlavice
@@ -26,18 +26,25 @@ function day_decode ( $a_definition ) {
 		if ( ! $l_casy [$l_idxstart] ) {
 			continue;
 		}
-		$l_od = hexdec ( $l_casy [$l_idxstart] );
-		$l_do = hexdec ( $l_casy [$l_idxstart + 1] );
 
-		if ( $l_do <= $l_od ) {
-			continue;
+		if ( $l_casy [$l_idxstart] == 0 ) {
+			$l_od = "";
+		}
+		else {
+			$l_od = hexdec ( $l_casy [$l_idxstart] );
+			$l_od = sprintf ( "%02d:%02d", intval ( $l_od / 6 ), ($l_od % 6) * 10 );
 		}
 
-		$l_od = sprintf ( "%02d:%02d", intval ( $l_od / 6 ), ($l_od % 6) * 10 );
-		$l_do = sprintf ( "%02d:%02d", intval ( $l_do / 6 ), ($l_do % 6) * 10 );
-
+		if ( $l_casy [$l_idxstart] == 0 ) {
+			$l_do = "";
+		}
+		else {
+			$l_do = hexdec ( $l_casy [$l_idxstart + 1] );
+			$l_do = sprintf ( "%02d:%02d", intval ( $l_do / 6 ), ($l_do % 6) * 10 );
+		}
 		$l_intervaly [] = array ('from' => $l_od, 'to' => $l_do );
 	}
+	sort($l_intervaly, SORT_STRING);
 
 	return $l_intervaly;
 }
@@ -60,8 +67,8 @@ function dovolena_decode ( $a_definition ) {
 	}
 
 	return array (
-		'from' => sprintf ( "%02d/%02d/%02d %02d:00", hexdec ( $l_casti [2] ), hexdec ( $l_casti [1] ), hexdec ( $l_casti [3] ), hexdec ( $l_casti [0] ) % 128 ),
-		'to' => sprintf ( "%02d/%02d/%02d %02d:00", hexdec ( $l_casti [6] ), hexdec ( $l_casti [5] ), hexdec ( $l_casti [7] ), hexdec ( $l_casti [4] ) % 128 ),
+		'from' => sprintf ( "%02d/%02d/%02d %02d", hexdec ( $l_casti [2] ), hexdec ( $l_casti [1] ), hexdec ( $l_casti [3] ), hexdec ( $l_casti [0] ) % 128 ),
+		'to' => sprintf ( "%02d/%02d/%02d %02d", hexdec ( $l_casti [6] ), hexdec ( $l_casti [5] ), hexdec ( $l_casti [7] ), hexdec ( $l_casti [4] ) % 128 ),
 		'temp' => hexdec ( $l_casti [8] ) / 2 );
 }
 
@@ -78,7 +85,7 @@ function day_encode ( $a_definition ) {
 
 	foreach ( $a_definition as $l_def ) {
 		$l_od = explode ( ":", $l_def ['from'] );
-		if ( $l_od ) {
+		if ( $l_od [0] ) {
 			$l_od = $l_od [0] * 6 + $l_od [1] / 10;
 		}
 		else {
@@ -86,7 +93,7 @@ function day_encode ( $a_definition ) {
 		}
 
 		$l_do = explode ( ":", $l_def ['to'] );
-		if ( $l_do ) {
+		if ( $l_do [0] ) {
 			$l_do = $l_do [0] * 6 + $l_do [1] / 10;
 		}
 		else {
@@ -107,6 +114,8 @@ function day_encode ( $a_definition ) {
  * @return string
  */
 function dovolena_encode ( $a_definition ) {
+	echo "OK", PHP_EOL;
+
 	$l_data = array_fill ( 0, 9, "00" );
 
 	if ( $a_definition == "null" || $a_definition === null ) {
@@ -196,7 +205,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 		$l_pins = array ();
 		$cases = array (array ("value: ([^,]+)", "PIN", EXP_REGEXP ), array ('[GATT client]', 'END', EXP_EXACT ) );
 		while ( true ) {
-			$l_match = array();
+			$l_match = array ();
 			$l_x = expect_expectl ( $stream, $cases, $l_match );
 			switch ( $l_x ) {
 				case "PIN" :
@@ -353,7 +362,6 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 			switch ( expect_expectl ( $stream, $cases, $l_match ) ) {
 				case "PIN" :
 					$l_pins [] = $l_match [1];
-					echo "OK", PHP_EOL;
 					break;
 
 				case 'END' :
@@ -423,7 +431,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 		// BIT_MANUAL = 0x01
 		// BIT_LOCKED = 0x80
 		// BIT_WINDOW = 0x10
-		$l_mode = hexdec($l_source [16] [0]);
+		$l_mode = hexdec ( $l_source [16] [0] );
 		if ( $a_radiator ['mode_manual'] ) {
 			$l_mode |= 0x01;
 		}
@@ -435,8 +443,8 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 		// Teploty
 		$l_offset = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);
-		$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s",  $l_source [17] [0] , dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ),
-				dechex ( $l_offset ), dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
+		$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s", $l_source [17] [0], dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ), dechex ( $l_offset ),
+				dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
 
 		// Zapis hodnoty
 		$cases = array (array ("Write successful", "OK" ) );

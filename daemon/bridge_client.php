@@ -30,6 +30,9 @@ while ( ! $GLOBALS ['stop'] ) {
 	while ( ! $GLOBALS ['now'] && ! $GLOBALS ['stop'] && time () < $GLOBALS ['synchro'] ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
 		sleep ( 1 );
+		if ( $GLOBALS ['heating'] ['radiators']) {
+			break;
+		}
 	}
 
 	if ( $GLOBALS ['stop'] ) {
@@ -72,7 +75,10 @@ while ( ! $GLOBALS ['stop'] ) {
 			$l_correct = true;
 		}
 		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
-			if ( $l_radiator [$l_colname] != $l_radiator [$l_colname] ) {
+			if ( $l_radiator [$l_colname] != $l_radiator_now [$l_colname] ) {
+				echo "BAD value:".$l_colname,PHP_EOL;
+				var_export($l_radiator [$l_colname]);
+				var_export($l_radiator_now [$l_colname]);
 				$l_correct = true;
 				break;
 			}
@@ -81,7 +87,6 @@ while ( ! $GLOBALS ['stop'] ) {
 		// Odesli informace na MQTT
 		bridge_publish ( 'radiator_actual/' . $l_radiator ['name'], $l_radiator );
 
-		echo "OK", PHP_EOL;
 
 		if ( $l_correct ) {
 			echo "BAD DATA IN HEAD, Repairing ... ";

@@ -77,7 +77,7 @@ if ( isset ( $_REQUEST ['dovolena'] ) ) {
 	}
 
 	foreach ( $GLOBALS ['heating'] ['radiators'] as $l_idx => $l_radiator ) {
-		$GLOBALS ['heating'] ['radiators'] [$l_idx] ['dovolena'] = array ('from' => strftime ( "%x %X", $l_from ), 'to' => strftime ( "%x %X", $l_to ), "temp" => floatval ( $_REQUEST ["temp"] ) );
+		$GLOBALS ['heating'] ['radiators'] [$l_idx] ['dovolena'] = array ('from' => strftime ( "%x %h", $l_from ), 'to' => strftime ( "%x %h", $l_to ), "temp" => floatval ( $_REQUEST ["temp"] ) );
 		$GLOBALS ['heating'] ['radiators'] [$l_idx] ['conf'] = 'modified';
 	}
 }
