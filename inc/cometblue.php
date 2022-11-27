@@ -78,10 +78,20 @@ function day_encode ( $a_definition ) {
 
 	foreach ( $a_definition as $l_def ) {
 		$l_od = explode ( ":", $l_def ['from'] );
-		$l_od = $l_od [0] * 6 + $l_od [1] / 10;
+		if ( $l_od ) {
+			$l_od = $l_od [0] * 6 + $l_od [1] / 10;
+		}
+		else {
+			$l_od = 0;
+		}
 
 		$l_do = explode ( ":", $l_def ['to'] );
-		$l_do = $l_do [0] * 6 + $l_do [1] / 10;
+		if ( $l_do ) {
+			$l_do = $l_do [0] * 6 + $l_do [1] / 10;
+		}
+		else {
+			$l_do = 0;
+		}
 
 		$l_intervaly [$l_idxstart ++] = "0x" . dechex ( $l_od );
 		$l_intervaly [$l_idxstart ++] = "0x" . dechex ( $l_do );
@@ -103,7 +113,7 @@ function dovolena_encode ( $a_definition ) {
 		return implode ( " ", $l_data );
 	}
 
-	$l_p =  '';
+	$l_p = '';
 	preg_match ( "/([0-9]{2})\\/([0-9]{2})\\/([0-9]{2}) ([0-9]{2})/", $a_definition ['from'], $l_p );
 
 	$l_data [0] = "0x" . dechex ( $l_p [4] );
@@ -141,7 +151,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 
 		$l_retry = 3;
 		while ( true ) {
-			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_mac, "at" );
+			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec /usr/local/bin/btgatt-client -d " . $a_mac, "at" );
 			if ( ! is_resource ( $stream ) ) {
 				return false;
 			}
@@ -151,7 +161,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 				case "connectionstarted" :
 					break;
 				default :
-					throw new Exception ( "Chyba" );
+					throw new Exception ( "Chyba connect" );
 			}
 			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Error" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
@@ -164,10 +174,10 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 
 					$l_retry --;
 					if ( $l_retry < 0 ) {
-						throw new Exception ( "Chyba" );
+						throw new Exception ( "Chyba connect" );
 					}
 					sleep ( 15 );
-					continue;
+					break;
 
 				case "Error" :
 				default :
@@ -175,17 +185,36 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 			}
 		}
 
-		$cases = array (array ("47e9ee30-47e9-11e4-8939-164230d1df67", "OK" ) );
+		$cases = array (array ("type: primary, uuid: 47e9ee00-47e9-11e4-8939-164230d1df67", "OK", EXP_EXACT ) );
 		switch ( expect_expectl ( $stream, $cases ) ) {
 			case "OK" :
 				break;
 			default :
-				throw new Exception ( "Chyba" );
+				throw new Exception ( "Chyba Desc" );
 		}
 
-		ini_set ( "expect.timeout", 5 );
+		$l_pins = array ();
+		$cases = array (array ("value: ([^,]+)", "PIN", EXP_REGEXP ), array ('[GATT client]', 'END', EXP_EXACT ) );
+		while ( true ) {
+			$l_match = array();
+			$l_x = expect_expectl ( $stream, $cases, $l_match );
+			switch ( $l_x ) {
+				case "PIN" :
+					$l_pins [] = $l_match [1];
+					break;
 
-		fwrite ( $stream, "write-value 0x0048 " . $a_pin . "\n" );
+				case 'END' :
+				case EXP_TIMEOUT :
+					break 2;
+
+				default :
+					throw new Exception ( "Chyba" );
+			}
+		}
+
+		$l_pinaddr = array_pop ( $l_pins );
+
+		fwrite ( $stream, "write-value " . $l_pinaddr . " " . $a_pin . "\n" );
 
 		$cases = array (array ("Write successful", "OK" ) );
 		switch ( expect_expectl ( $stream, $cases ) ) {
@@ -195,17 +224,19 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 				throw new Exception ( "Chyba" );
 		}
 
-		$cases = array (array ("Read value \([0-9]+ bytes\): ([^\n]+) \r?\n", "data", EXP_REGEXP ) );
-		foreach ( array ('0x001b', '0x001d', '0x001f', '0x0021', '0x0023', '0x0025', '0x0027', '0x0029', '0x002b', '0x002d', '0x002f', '0x0031', '0x0033', '0x0035', '0x0037', '0x0039', '0x003b', '0x003d', '0x003f' ) as $l_idx => $l_handle ) {
+		$cases = array (array ("Read value \([0-9]+ bytes\): ([^\n]+) \r?\n", "data", EXP_REGEXP ), array ("Read value: 0 bytes", 'nodata', EXP_EXACT ) );
+		foreach ( $l_pins as $l_idx => $l_handle ) {
 			fwrite ( $stream, "read-value " . $l_handle . "\n" );
 
 			switch ( expect_expectl ( $stream, $cases, $l_data ) ) {
 				case "data" :
+					$l_output [$l_idx] = $l_data [1];
+					break;
+				case 'nodata' :
 					break;
 				default :
 					throw new Exception ( "Chyba" );
 			}
-			$l_output [$l_idx] = $l_data [1];
 		}
 
 		// Poslani CTRL-C
@@ -219,6 +250,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 				throw new Exception ( "Chyba" );
 		}
 	} catch ( Exception $e ) {
+		fprintf ( STDERR, $e->getTraceAsString () . PHP_EOL . $e->getMessage () );
 		fclose ( $stream );
 		return false;
 	}
@@ -243,10 +275,10 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 
 	// Teploty
 	$l_teploty = explode ( " ", $l_output [17] );
-	$l_radiator ['required'] = hexdec ( $l_teploty [1] ) / 2;
 	$l_radiator ['current'] = hexdec ( $l_teploty [0] ) / 2;
-	$l_radiator ['comfort'] = hexdec ( $l_teploty [3] ) / 2;
+	$l_radiator ['required'] = hexdec ( $l_teploty [1] ) / 2;
 	$l_radiator ['night'] = hexdec ( $l_teploty [2] ) / 2;
+	$l_radiator ['comfort'] = hexdec ( $l_teploty [3] ) / 2;
 	$l_radiator ['offset'] = hexdec ( $l_teploty [4] );
 	if ( $l_radiator ['offset'] > 128 ) {
 		$l_radiator ['offset'] -= 256;
@@ -265,47 +297,6 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
  * @param array $a_radiator
  */
 function cometblue_sendconf ( $a_radiator, $a_pin ) {
-	/* Zakodovani dat */
-	$l_output = array ();
-
-	// Aktualni cas a datum
-	$l_date = getdate ();
-	$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s", dechex ( $l_date ['minutes'] ), dechex ( $l_date ['hours'] ), dechex ( $l_date ['mday'] ), dechex ( $l_date ['mon'] ), dechex ( $l_date ['year'] % 1000 ) );
-
-	// Programator tydne
-	$l_output [] = day_encode ( $a_radiator ['pondeli'] );
-	$l_output [] = day_encode ( $a_radiator ['utery'] );
-	$l_output [] = day_encode ( $a_radiator ['streda'] );
-	$l_output [] = day_encode ( $a_radiator ['ctvrtek'] );
-	$l_output [] = day_encode ( $a_radiator ['patek'] );
-	$l_output [] = day_encode ( $a_radiator ['sobota'] );
-	$l_output [] = day_encode ( $a_radiator ['nedele'] );
-
-	//
-	$l_output [] = dovolena_encode ( $a_radiator ['dovolena'] );
-	$l_output [] = dovolena_encode ( null );
-	$l_output [] = dovolena_encode ( null );
-	$l_output [] = dovolena_encode ( null );
-	$l_output [] = dovolena_encode ( null );
-	$l_output [] = dovolena_encode ( null );
-	$l_output [] = dovolena_encode ( null );
-	$l_output [] = dovolena_encode ( null );
-
-	// Flags
-	// BIT_MANUAL = 0x01
-	// BIT_LOCKED = 0x80
-	// BIT_WINDOW = 0x10
-	$l_mode = 0;
-	if ($a_radiator['mode_manual']) {
-		$l_mode |= 0x01;
-	}
-	// Zamcen neni
-	$l_output [] = sprintf("0x%s 00 00", dechex ( $l_mode ));
-
-	// Teploty
-	$a_radiator ['offset'] = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);
-	$l_output [] = sprintf ( "0x80 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s", dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ), dechex ( $a_radiator ['offset'] ),
-			dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
 
 	/* Nahrání do zažízení */
 	try {
@@ -315,7 +306,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 		$l_retry = 3;
 		while ( true ) {
-			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec btgatt-client -d " . $a_radiator ['mac'], "at" );
+			$stream = fopen ( "expect://LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 exec /usr/local/bin/btgatt-client -d " . $a_radiator ['mac'], "at" );
 			if ( ! is_resource ( $stream ) ) {
 				return false;
 			}
@@ -336,11 +327,12 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 					fclose ( $stream );
 
 					$l_retry --;
+					echo "OK", PHP_EOL;
 					if ( $l_retry < 0 ) {
 						throw new Exception ( "Chyba" );
 					}
 					sleep ( 15 );
-					continue;
+					break;
 
 				case "Error" :
 				default :
@@ -348,18 +340,34 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 			}
 		}
 
-		$cases = array (array ("47e9ee30-47e9-11e4-8939-164230d1df67", "OK" ) );
+		$cases = array (array ("type: primary, uuid: 47e9ee00-47e9-11e4-8939-164230d1df67", "OK" ) );
 		switch ( expect_expectl ( $stream, $cases ) ) {
 			case "OK" :
 				break;
 			default :
 				throw new Exception ( "Chyba" );
 		}
+		$l_pins = array ();
+		$cases = array (array ("value: ([^,]+)", "PIN", EXP_REGEXP ), array ('[GATT client]', 'END', EXP_EXACT ) );
+		while ( true ) {
+			switch ( expect_expectl ( $stream, $cases, $l_match ) ) {
+				case "PIN" :
+					$l_pins [] = $l_match [1];
+					echo "OK", PHP_EOL;
+					break;
 
-		ini_set ( "expect.timeout", 5 );
+				case 'END' :
+				case EXP_TIMEOUT :
+					break 2;
 
-		fwrite ( $stream, "write-long-value 0x0048 " . $a_pin . "\n" );
+				default :
+					throw new Exception ( "Chyba" );
+			}
+		}
 
+		$l_pinaddr = array_pop ( $l_pins );
+
+		fwrite ( $stream, "write-value " . $l_pinaddr . " " . $a_pin . "\n" );
 		$cases = array (array ("Write successful", "OK" ) );
 		switch ( expect_expectl ( $stream, $cases ) ) {
 			case "OK" :
@@ -368,15 +376,82 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 				throw new Exception ( "Chyba" );
 		}
 
+		// Nacti hodnotu stavu a uprav ji podle pozadovanych bitu, jinak ji nech
+		$cases = array (array ("Read value \([0-9]+ bytes\): ([^\n]+) \r?\n", "data", EXP_REGEXP ), array ("Read value: 0 bytes", 'nodata', EXP_EXACT ) );
+		foreach ( array (16 => $l_pins [16], 17 => $l_pins [17] ) as $l_idx => $l_handle ) {
+			fwrite ( $stream, "read-value " . $l_handle . "\n" );
+
+			switch ( expect_expectl ( $stream, $cases, $l_data ) ) {
+				case "data" :
+					$l_source [$l_idx] = explode ( " ", $l_data [1] );
+					break;
+				case 'nodata' :
+					break;
+				default :
+					throw new Exception ( "Chyba" );
+			}
+		}
+
+		// priprav data
+		/* Zakodovani dat */
+		$l_output = array ();
+
+		// Aktualni cas a datum
+		$l_date = getdate ();
+		$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s", dechex ( $l_date ['minutes'] ), dechex ( $l_date ['hours'] ), dechex ( $l_date ['mday'] ), dechex ( $l_date ['mon'] ), dechex ( $l_date ['year'] % 1000 ) );
+
+		// Programator tydne
+		$l_output [] = day_encode ( $a_radiator ['pondeli'] );
+		$l_output [] = day_encode ( $a_radiator ['utery'] );
+		$l_output [] = day_encode ( $a_radiator ['streda'] );
+		$l_output [] = day_encode ( $a_radiator ['ctvrtek'] );
+		$l_output [] = day_encode ( $a_radiator ['patek'] );
+		$l_output [] = day_encode ( $a_radiator ['sobota'] );
+		$l_output [] = day_encode ( $a_radiator ['nedele'] );
+
+		//
+		$l_output [] = dovolena_encode ( $a_radiator ['dovolena'] );
+		$l_output [] = dovolena_encode ( null );
+		$l_output [] = dovolena_encode ( null );
+		$l_output [] = dovolena_encode ( null );
+		$l_output [] = dovolena_encode ( null );
+		$l_output [] = dovolena_encode ( null );
+		$l_output [] = dovolena_encode ( null );
+		$l_output [] = dovolena_encode ( null );
+
+		// Flags
+		// BIT_MANUAL = 0x01
+		// BIT_LOCKED = 0x80
+		// BIT_WINDOW = 0x10
+		$l_mode = hexdec($l_source [16] [0]);
+		if ( $a_radiator ['mode_manual'] ) {
+			$l_mode |= 0x01;
+		}
+		else {
+			$l_mode &= 254;
+		}
+		// Zamcen neni
+		$l_output [] = sprintf ( "0x%s 0x%s 0x%s", dechex ( $l_mode ), $l_source [16] [1], $l_source [16] [2] );
+
+		// Teploty
+		$l_offset = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);
+		$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s",  $l_source [17] [0] , dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ),
+				dechex ( $l_offset ), dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
+
+		// Zapis hodnoty
 		$cases = array (array ("Write successful", "OK" ) );
-		foreach ( array ('0x001b', '0x001d', '0x001f', '0x0021', '0x0023', '0x0025', '0x0027', '0x0029', '0x002b', '0x002d', '0x002f', '0x0031', '0x0033', '0x0035', '0x0037', '0x0039', '0x003b', '0x003d' ) as $l_idx => $l_handle ) {
+		foreach ( $l_pins as $l_idx => $l_handle ) {
+			if ( ! array_key_exists ( $l_idx, $l_output ) ) {
+				continue;
+			}
+
 			fwrite ( $stream, "write-value " . $l_handle . " " . $l_output [$l_idx] . "\n" );
 
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "OK" :
 					break;
 				default :
-					throw new Exception ( "Chyba" );
+					throw new Exception ( "Chyba " . $l_handle );
 			}
 		}
 

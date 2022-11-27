@@ -21,13 +21,13 @@ bridgeclient_connect ();
 
 $GLOBALS ['stop'] = false;
 
-$GLOBALS['synchro']  = INTERVAL * 60 + time ();
+$GLOBALS ['synchro'] = INTERVAL * 60 + time ();
 
 while ( ! $GLOBALS ['stop'] ) {
 
-    $GLOBALS ['now']  = 0;
-	printf ( "Processing MQTT to %s".PHP_EOL, strftime ( "%X", $GLOBALS['synchro'] ) );
-	while ( ! $GLOBALS ['now'] &&  ! $GLOBALS ['stop'] &&  time () < $GLOBALS['synchro'] ) {
+	$GLOBALS ['now'] = 0;
+	printf ( "Processing MQTT to %s" . PHP_EOL, strftime ( "%X", $GLOBALS ['synchro'] ) );
+	while ( ! $GLOBALS ['now'] && ! $GLOBALS ['stop'] && time () < $GLOBALS ['synchro'] ) {
 		$GLOBALS ['bridge'] ['client']->loop ();
 		sleep ( 1 );
 	}
@@ -36,19 +36,19 @@ while ( ! $GLOBALS ['stop'] ) {
 		continue;
 	}
 
-	if (! $GLOBALS ['now'] ) {
-        $GLOBALS['synchro']  = INTERVAL * 60 + time ();
-    }
-	
+	if ( ! $GLOBALS ['now'] ) {
+		$GLOBALS ['synchro'] = INTERVAL * 60 + time ();
+	}
+
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
 
-	fprintf(STDOUT, "Reading radiators".PHP_EOL);
+	fprintf ( STDOUT, "Reading radiators" . PHP_EOL );
 
 	// Nacteni udaju
 	// Test, zda-li se maji aktualizovat nastaveni v hlavicich
 	foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
 		unset ( $l_radiator );
-		$l_radiator = & $GLOBALS ['heating'] ['radiators'] [$l_idx];
+		$l_radiator = &$GLOBALS ['heating'] ['radiators'] [$l_idx];
 
 		echo $l_radiator ['mac'], '=', $l_radiator ['name'], "...";
 
@@ -64,10 +64,30 @@ while ( ! $GLOBALS ['stop'] ) {
 		$l_radiator ['current'] = $l_radiator_now ['current'];
 		$l_radiator ['lastdata'] = $l_radiator_now ['lastdata'];
 
+		// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
+		// Pokud nesedi, tak hlavici prenastav
+		$l_correct = true;
+		if ( $l_radiator ['required'] > $l_radiator ['comfort'] ) {
+			$l_radiator ['required'] = $l_radiator ['comfort'];
+			$l_correct = true;
+		}
+		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
+			if ( $l_radiator [$l_colname] != $l_radiator [$l_colname] ) {
+				$l_correct = true;
+				break;
+			}
+		}
+
 		// Odesli informace na MQTT
-		bridge_publish( 'radiator_actual/' . $l_radiator ['name'] , $l_radiator );
-	
+		bridge_publish ( 'radiator_actual/' . $l_radiator ['name'], $l_radiator );
+
 		echo "OK", PHP_EOL;
+
+		if ( $l_correct ) {
+			echo "BAD DATA IN HEAD, Repairing ... ";
+			cometblue_sendconf ( $l_radiator, PIN );
+			echo "OK", PHP_EOL;
+		}
 	}
 }
 

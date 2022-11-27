@@ -4,7 +4,7 @@ require_once 'sem.php';
 function bridgemaster_connect () {
 	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ( $GLOBALS ['bridge'] ['id'] );
 	$GLOBALS ['bridge'] ['client']->onMessage ( 'bridgemaster_message' );
-	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 86400 );
+	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'] );
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( 'ready/#', 1 );
 	$GLOBALS ['bridge'] ['client']->subscribe ( 'radiator_actual/#', 1 );
@@ -16,7 +16,7 @@ function bridgemaster_connect () {
 function bridgeclient_connect () {
 	$GLOBALS ['bridge'] ['client'] = new Mosquitto\Client ( $GLOBALS ['bridge'] ['id'] );
 	$GLOBALS ['bridge'] ['client']->onMessage ( 'bridgeclient_message' );
-	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port'], 86400 );
+	$GLOBALS ['bridge'] ['client']->connect ( $GLOBALS ['bridge'] ['host'], $GLOBALS ['bridge'] ['port']);
 
 	$GLOBALS ['bridge'] ['client']->subscribe ( 'config/' . $GLOBALS ['bridge'] ['id'], 1 );
 
