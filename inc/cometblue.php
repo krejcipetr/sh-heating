@@ -44,7 +44,9 @@ function day_decode ( $a_definition ) {
 		}
 		$l_intervaly [] = array ('from' => $l_od, 'to' => $l_do );
 	}
-	sort($l_intervaly, SORT_STRING);
+	usort ( $l_intervaly, function ( $a, $b ) {
+		return strcmp ( $b ['from'], $a ['from'] );
+	} );
 
 	return $l_intervaly;
 }
@@ -100,8 +102,8 @@ function day_encode ( $a_definition ) {
 			$l_do = 0;
 		}
 
-		$l_intervaly [$l_idxstart ++] = "0x" . dechex ( $l_od );
-		$l_intervaly [$l_idxstart ++] = "0x" . dechex ( $l_do );
+		$l_intervaly [$l_idxstart ++] = sprintf ( "0x%02s", dechex ( $l_od ) );
+		$l_intervaly [$l_idxstart ++] = sprintf ( "0x%02s", dechex ( $l_do ) );
 	}
 
 	return implode ( " ", $l_intervaly );
@@ -114,8 +116,6 @@ function day_encode ( $a_definition ) {
  * @return string
  */
 function dovolena_encode ( $a_definition ) {
-	echo "OK", PHP_EOL;
-
 	$l_data = array_fill ( 0, 9, "00" );
 
 	if ( $a_definition == "null" || $a_definition === null ) {
@@ -125,19 +125,19 @@ function dovolena_encode ( $a_definition ) {
 	$l_p = '';
 	preg_match ( "/([0-9]{2})\\/([0-9]{2})\\/([0-9]{2}) ([0-9]{2})/", $a_definition ['from'], $l_p );
 
-	$l_data [0] = "0x" . dechex ( $l_p [4] );
-	$l_data [1] = "0x" . dechex ( $l_p [2] );
-	$l_data [2] = "0x" . dechex ( $l_p [1] );
-	$l_data [3] = "0x" . dechex ( $l_p [3] );
+	$l_data [0] = sprintf ( "0x%02s", dechex ( $l_p [4] ) );
+	$l_data [1] = sprintf ( "0x%02s", dechex ( $l_p [2] ) );
+	$l_data [2] = sprintf ( "0x%02s", dechex ( $l_p [1] ) );
+	$l_data [3] = sprintf ( "0x%02s", dechex ( $l_p [3] ) );
 
 	preg_match ( "/([0-9]{2})\\/([0-9]{2})\\/([0-9]{2}) ([0-9]{2})/", $a_definition ['to'], $l_p );
 
-	$l_data [4] = "0x" . dechex ( $l_p [4] );
-	$l_data [5] = "0x" . dechex ( $l_p [2] );
-	$l_data [6] = "0x" . dechex ( $l_p [1] );
-	$l_data [7] = "0x" . dechex ( $l_p [3] );
+	$l_data [4] = sprintf ( "0x%02s", dechex ( $l_p [4] ) );
+	$l_data [5] = sprintf ( "0x%02s", dechex ( $l_p [2] ) );
+	$l_data [6] = sprintf ( "0x%02s", dechex ( $l_p [1] ) );
+	$l_data [7] = sprintf ( "0x%02s", dechex ( $l_p [3] ) );
 
-	$l_data [8] = "0x" . dechex ( $a_definition ['temp'] * 2 );
+	$l_data [8] = sprintf ( "0x%02s", dechex ( $a_definition ['temp'] * 2 ) );
 
 	return implode ( " ", $l_data );
 }
@@ -155,7 +155,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 	/* Nacteni ze zažízení */
 	try {
 
-		ini_set ( "expect.timeout", 120 );
+		ini_set ( "expect.timeout", 240 );
 		ini_set ( "expect.loguser", 0 );
 
 		$l_retry = 3;
@@ -172,10 +172,10 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 				default :
 					throw new Exception ( "Chyba connect" );
 			}
-			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Error" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
+			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Retry" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "OK" :
-					break 2;
+					break;
 				case EXP_TIMEOUT :
 				case EXP_EOF :
 				case "Retry" :
@@ -186,20 +186,29 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 						throw new Exception ( "Chyba connect" );
 					}
 					sleep ( 15 );
-					break;
+					continue 2;
 
 				case "Error" :
 				default :
 					throw new Exception ( "Chyba" );
 			}
-		}
 
-		$cases = array (array ("type: primary, uuid: 47e9ee00-47e9-11e4-8939-164230d1df67", "OK", EXP_EXACT ) );
-		switch ( expect_expectl ( $stream, $cases ) ) {
-			case "OK" :
-				break;
-			default :
-				throw new Exception ( "Chyba Desc" );
+			$cases = array (array ("type: primary, uuid: 47e9ee00-47e9-11e4-8939-164230d1df67", "OK" ), array ("GATT discovery procedures failed", "Retry" ) );
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "OK" :
+					break 2;
+				case "Retry" :
+					fclose ( $stream );
+
+					$l_retry --;
+					if ( $l_retry < 0 ) {
+						throw new Exception ( "Chyba" );
+					}
+					sleep ( 15 );
+					continue 2;
+				default :
+					throw new Exception ( "Chyba" );
+			}
 		}
 
 		$l_pins = array ();
@@ -310,7 +319,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 	/* Nahrání do zažízení */
 	try {
 
-		ini_set ( "expect.timeout", 120 );
+		ini_set ( "expect.timeout", 240 );
 		ini_set ( "expect.loguser", 0 );
 
 		$l_retry = 3;
@@ -326,36 +335,45 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 				default :
 					throw new Exception ( "Chyba" );
 			}
-			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Error" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
+			$cases = array (array ("Done", "OK" ), array ("Failed to connect: Device or resource busy", "Retry" ), array ("Failed to connect: Transport endpoint is not connected", "Retry" ) );
 			switch ( expect_expectl ( $stream, $cases ) ) {
 				case "OK" :
-					break 2;
+					break;
 				case EXP_TIMEOUT :
 				case EXP_EOF :
 				case "Retry" :
 					fclose ( $stream );
 
 					$l_retry --;
-					echo "OK", PHP_EOL;
 					if ( $l_retry < 0 ) {
 						throw new Exception ( "Chyba" );
 					}
 					sleep ( 15 );
-					break;
+					continue 2;
 
 				case "Error" :
 				default :
 					throw new Exception ( "Chyba" );
 			}
+
+			$cases = array (array ("type: primary, uuid: 47e9ee00-47e9-11e4-8939-164230d1df67", "OK" ), array ("GATT discovery procedures failed", "Retry" ) );
+			switch ( expect_expectl ( $stream, $cases ) ) {
+				case "OK" :
+					break 2;
+				case "Retry" :
+					fclose ( $stream );
+
+					$l_retry --;
+					if ( $l_retry < 0 ) {
+						throw new Exception ( "Chyba" );
+					}
+					sleep ( 15 );
+					continue 2;
+				default :
+					throw new Exception ( "Chyba" );
+			}
 		}
 
-		$cases = array (array ("type: primary, uuid: 47e9ee00-47e9-11e4-8939-164230d1df67", "OK" ) );
-		switch ( expect_expectl ( $stream, $cases ) ) {
-			case "OK" :
-				break;
-			default :
-				throw new Exception ( "Chyba" );
-		}
 		$l_pins = array ();
 		$cases = array (array ("value: ([^,]+)", "PIN", EXP_REGEXP ), array ('[GATT client]', 'END', EXP_EXACT ) );
 		while ( true ) {
@@ -406,7 +424,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 		// Aktualni cas a datum
 		$l_date = getdate ();
-		$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s", dechex ( $l_date ['minutes'] ), dechex ( $l_date ['hours'] ), dechex ( $l_date ['mday'] ), dechex ( $l_date ['mon'] ), dechex ( $l_date ['year'] % 1000 ) );
+		$l_output [] = sprintf ( "0x%02s 0x%02s 0x%02s 0x%02s 0x%02s", dechex ( $l_date ['minutes'] ), dechex ( $l_date ['hours'] ), dechex ( $l_date ['mday'] ), dechex ( $l_date ['mon'] ), dechex ( $l_date ['year'] % 1000 ) );
 
 		// Programator tydne
 		$l_output [] = day_encode ( $a_radiator ['pondeli'] );
@@ -432,19 +450,37 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 		// BIT_LOCKED = 0x80
 		// BIT_WINDOW = 0x10
 		$l_mode = hexdec ( $l_source [16] [0] );
-		if ( $a_radiator ['mode_manual'] ) {
+		if ( $a_radiator ['mode_manual'] ?? 0) {
 			$l_mode |= 0x01;
 		}
 		else {
 			$l_mode &= 254;
 		}
 		// Zamcen neni
-		$l_output [] = sprintf ( "0x%s 0x%s 0x%s", dechex ( $l_mode ), $l_source [16] [1], $l_source [16] [2] );
+		$l_output [] = sprintf ( "0x%02s 0x%02s 0x%02s", dechex ( $l_mode ), $l_source [16] [1], $l_source [16] [2] );
 
 		// Teploty
 		$l_offset = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);
-		$l_output [] = sprintf ( "0x%s 0x%s 0x%s 0x%s 0x%s 0x%s 0x%s", $l_source [17] [0], dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ), dechex ( $l_offset ),
-				dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
+		$l_output [] = sprintf ( "0x%02s 0x%02s 0x%02s 0x%02s 0x%02s 0x%02s 0x%02s", $l_source [17] [0], dechex ( $a_radiator ['required'] * 2 ), dechex ( $a_radiator ['night'] * 2 ), dechex ( $a_radiator ['comfort'] * 2 ),
+				dechex ( $l_offset ), dechex ( $a_radiator ['window_detect'] ['sensivity'] ), dechex ( $a_radiator ['window_detect'] ['timer'] ) );
+
+		// Znovu odemceni 2x
+		fwrite ( $stream, "write-value " . $l_pinaddr . " " . $a_pin . "\n" );
+		$cases = array (array ("Write successful", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
+		fwrite ( $stream, "write-value " . $l_pinaddr . " " . $a_pin . "\n" );
+		$cases = array (array ("Write successful", "OK" ) );
+		switch ( expect_expectl ( $stream, $cases ) ) {
+			case "OK" :
+				break;
+			default :
+				throw new Exception ( "Chyba" );
+		}
 
 		// Zapis hodnoty
 		$cases = array (array ("Write successful", "OK" ) );
@@ -475,6 +511,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 		}
 	} catch ( Exception $e ) {
 		fprintf ( STDERR, $e->getTraceAsString () . PHP_EOL . $e->getMessage () );
+		fwrite ( $stream, chr ( 3 ) );
 		fclose ( $stream );
 		return false;
 	}

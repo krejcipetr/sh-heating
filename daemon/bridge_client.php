@@ -28,11 +28,13 @@ while ( ! $GLOBALS ['stop'] ) {
 	$GLOBALS ['now'] = 0;
 	printf ( "Processing MQTT to %s" . PHP_EOL, strftime ( "%X", $GLOBALS ['synchro'] ) );
 	while ( ! $GLOBALS ['now'] && ! $GLOBALS ['stop'] && time () < $GLOBALS ['synchro'] ) {
-		$GLOBALS ['bridge'] ['client']->loop ();
-		sleep ( 1 );
-		if ( $GLOBALS ['heating'] ['radiators']) {
-			break;
+		try {
+			$GLOBALS ['bridge'] ['client']->loop ();
+		} catch ( Mosquitto\Exception $m ) {
+			bridgeclient_connect ();
 		}
+
+		sleep ( 1 );
 	}
 
 	if ( $GLOBALS ['stop'] ) {
@@ -69,24 +71,23 @@ while ( ! $GLOBALS ['stop'] ) {
 
 		// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
 		// Pokud nesedi, tak hlavici prenastav
-		$l_correct = true;
+		$l_correct = false;
 		if ( $l_radiator ['required'] > $l_radiator ['comfort'] ) {
+			echo "BAD value:", 'required', PHP_EOL;
 			$l_radiator ['required'] = $l_radiator ['comfort'];
 			$l_correct = true;
 		}
 		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
 			if ( $l_radiator [$l_colname] != $l_radiator_now [$l_colname] ) {
-				echo "BAD value:".$l_colname,PHP_EOL;
-				var_export($l_radiator [$l_colname]);
-				var_export($l_radiator_now [$l_colname]);
+				echo "BAD value:" . $l_colname, PHP_EOL;
 				$l_correct = true;
 				break;
 			}
 		}
-
 		// Odesli informace na MQTT
+		echo "Sending data ", $l_radiator ['name'];
 		bridge_publish ( 'radiator_actual/' . $l_radiator ['name'], $l_radiator );
-
+		echo " OK", PHP_EOL;
 
 		if ( $l_correct ) {
 			echo "BAD DATA IN HEAD, Repairing ... ";
