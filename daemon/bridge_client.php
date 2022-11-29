@@ -79,7 +79,7 @@ while ( ! $GLOBALS ['stop'] ) {
 		}
 		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
 			if ( $l_radiator [$l_colname] != $l_radiator_now [$l_colname] ) {
-				echo "BAD value:" . $l_colname, PHP_EOL;
+				echo "BAD value:" , $l_colname, PHP_EOL;
 				$l_correct = true;
 				break;
 			}
@@ -90,7 +90,7 @@ while ( ! $GLOBALS ['stop'] ) {
 		echo " OK", PHP_EOL;
 
 		if ( $l_correct ) {
-			echo "BAD DATA IN HEAD, Repairing ... ";
+			echo "Repairing ... ";
 			cometblue_sendconf ( $l_radiator, PIN );
 			echo "OK", PHP_EOL;
 		}

@@ -119,10 +119,14 @@ if ( isset ( $_REQUEST ['radiatorsettings'] ) ) {
 					if ( $_SESSION ['radiator'] != - 1 ) {
 						unset ( $l_radiator [$l_den] [$l_idx2] );
 					}
-					continue;
 				}
-				$l_radiator [$l_den] [$l_idx2] = array ('from' => $_REQUEST ['from' . $l_den . $l_idx2], 'to' => $_REQUEST ['to' . $l_den . $l_idx2] );
+				else {
+					$_REQUEST ['from' . $l_den . $l_idx2] = strtotime($_REQUEST ['from' . $l_den . $l_idx2]);
+					$_REQUEST ['to' . $l_den . $l_idx2] = strtotime($_REQUEST ['to' . $l_den . $l_idx2]);
+					$l_radiator [$l_den] [$l_idx2] = array ('from' => strftime("%H:%M",$_REQUEST ['from' . $l_den . $l_idx2]), 'to' => strftime("%H:%M", $_REQUEST ['to' . $l_den . $l_idx2]) );
+				}
 			}
+			ksort($l_radiator[$l_den], SORT_NUMERIC);
 		}
 
 		$l_radiator ['conf'] = 'modified';
@@ -340,7 +344,7 @@ switch ( $_SESSION ['mode'] ) {
 		// Tydenni planovani?
 		if ( $_SESSION ['radiator'] != - 1 ) {
 			$l_radiator = $GLOBALS ['heating'] ['radiators'] [$_SESSION ['radiator']];
-			echo '<div style="text-align:center;"><h1>', htmlspecialchars ( $l_radiator ['name'] ), '</h1></div>';
+			echo '<div style="text-align:center;"><h1>', htmlspecialchars ( $l_radiator ['name'] ),"-", $l_radiator ['mac'] ,"-", $l_radiator ['bridge'] , '</h1></div>';
 		}
 		else {
 			$l_radiator = array ();
