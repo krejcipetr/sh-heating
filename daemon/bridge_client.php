@@ -8,7 +8,7 @@ require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
 require_once 'inc/source.php';
 
-if ( ! $argv [1] ) {
+if ( empty( $GLOBALS['argv'] [1] ) ) {
 	$l_configfile = 'bridge.json';
 }
 else {
@@ -65,18 +65,7 @@ while ( ! $GLOBALS ['stop'] ) {
 		}
 		echo "OK", PHP_EOL;
 
-		$l_radiator ['required'] = $l_radiator_now ['required'];
-		$l_radiator ['current'] = $l_radiator_now ['current'];
-		$l_radiator ['lastdata'] = $l_radiator_now ['lastdata'];
-
-		// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
-		// Pokud nesedi, tak hlavici prenastav
 		$l_correct = false;
-		if ( $l_radiator ['required'] > $l_radiator ['comfort'] ) {
-			echo "BAD value:", 'required', PHP_EOL;
-			$l_radiator ['required'] = $l_radiator ['comfort'];
-			$l_correct = true;
-		}
 		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
 			if ( $l_radiator [$l_colname] != $l_radiator_now [$l_colname] ) {
 				echo "BAD value:" , $l_colname, PHP_EOL;
@@ -84,6 +73,22 @@ while ( ! $GLOBALS ['stop'] ) {
 				break;
 			}
 		}
+
+		// Prevezmi hodnoty pouze pokud to bylo nastaveni planovace korektni, jinak oprav
+		if (! $l_correct) {
+			$l_radiator ['required'] = $l_radiator_now ['required'];
+			$l_radiator ['current'] = $l_radiator_now ['current'];
+			$l_radiator ['lastdata'] = $l_radiator_now ['lastdata'];
+		}
+
+		// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
+		// Pokud nesedi, tak hlavici prenastav
+		if ( $l_radiator ['required'] > $l_radiator ['comfort'] ) {
+			echo "BAD value:", 'required', PHP_EOL;
+			$l_radiator ['required'] = $l_radiator ['comfort'];
+			$l_correct = true;
+		}
+
 		// Odesli informace na MQTT
 		echo "Sending data ", $l_radiator ['name'];
 		bridge_publish ( 'radiator_actual/' . $l_radiator ['name'], $l_radiator );
@@ -94,6 +99,7 @@ while ( ! $GLOBALS ['stop'] ) {
 			cometblue_sendconf ( $l_radiator, PIN );
 			echo "OK", PHP_EOL;
 		}
+		sleep(10);
 	}
 }
 

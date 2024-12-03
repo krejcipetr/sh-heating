@@ -155,8 +155,8 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 	/* Nacteni ze zažízení */
 	try {
 
-		ini_set ( "expect.timeout", 240 );
-		ini_set ( "expect.loguser", 0 );
+		ini_set ( "expect.timeout", 30 );
+		ini_set ( "expect.loguser", 00);
 
 		$l_retry = 3;
 		while ( true ) {
@@ -212,12 +212,12 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 		}
 
 		$l_pins = array ();
-		$cases = array (array ("value: ([^,]+)", "PIN", EXP_REGEXP ), array ('[GATT client]', 'END', EXP_EXACT ) );
+		$cases = array (array ("value: ([^,]+),", "PIN", EXP_REGEXP ), array ('[GATT client]', 'END', EXP_EXACT ) );
 		while ( true ) {
-			$l_match = array ();
+			unset($l_match);
 			$l_x = expect_expectl ( $stream, $cases, $l_match );
 			switch ( $l_x ) {
-				case "PIN" :
+			case "PIN" :
 					$l_pins [] = $l_match [1];
 					break;
 
@@ -269,11 +269,14 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 		}
 	} catch ( Exception $e ) {
 		fprintf ( STDERR, $e->getTraceAsString () . PHP_EOL . $e->getMessage () );
-		fclose ( $stream );
 		return false;
 	}
+	finally {
+		is_resource($stream) && fclose ( $stream );
 
-	fclose ( $stream );
+		system("bluetoothctl disconnect ". $a_mac);
+	}
+
 
 	/* Zpracovani vystupu */
 
@@ -319,7 +322,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 	/* Nahrání do zažízení */
 	try {
 
-		ini_set ( "expect.timeout", 240 );
+		ini_set ( "expect.timeout", 30 );
 		ini_set ( "expect.loguser", 0 );
 
 		$l_retry = 3;
@@ -512,11 +515,12 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 	} catch ( Exception $e ) {
 		fprintf ( STDERR, $e->getTraceAsString () . PHP_EOL . $e->getMessage () );
 		fwrite ( $stream, chr ( 3 ) );
-		fclose ( $stream );
 		return false;
 	}
-
-	fclose ( $stream );
+	finally {
+		is_resource($stream) && fclose ( $stream );
+		system("bluetoothctl disconnect ". $a_radiator['mac']);
+	}
 
 	return true;
 }
