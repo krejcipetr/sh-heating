@@ -8,41 +8,42 @@ require_once 'inc/radiator.php';
 require_once 'inc/cometblue.php';
 require_once 'inc/source.php';
 
-if ( empty( $GLOBALS['argv'] [1] ) ) {
+if ( empty( $GLOBALS[ 'argv' ] [ 1 ] ) ) {
 	$l_configfile = 'bridge.json';
 }
 else {
-	$l_configfile = $argv [1];
+	$l_configfile = $argv [ 1 ];
 }
 
 bridge_load ( $l_configfile );
 
 bridgeclient_connect ();
 
-$GLOBALS ['stop'] = false;
+$GLOBALS [ 'stop' ] = false;
 
-$GLOBALS ['synchro'] = INTERVAL * 60 + time ();
+$GLOBALS [ 'synchro' ] = INTERVAL * 60 + time ();
 
-while ( ! $GLOBALS ['stop'] ) {
+while ( !$GLOBALS [ 'stop' ] ) {
 
-	$GLOBALS ['now'] = 0;
-	printf ( "Processing MQTT to %s" . PHP_EOL, strftime ( "%X", $GLOBALS ['synchro'] ) );
-	while ( ! $GLOBALS ['now'] && ! $GLOBALS ['stop'] && time () < $GLOBALS ['synchro'] ) {
+	$GLOBALS [ 'now' ] = 0;
+	printf ( "Processing MQTT to %s" . PHP_EOL, strftime ( "%X", $GLOBALS [ 'synchro' ] ) );
+	while ( !$GLOBALS [ 'now' ] && !$GLOBALS [ 'stop' ] && time () < $GLOBALS [ 'synchro' ] ) {
 		try {
-			$GLOBALS ['bridge'] ['client']->loop ();
-		} catch ( Mosquitto\Exception $m ) {
+			$GLOBALS [ 'bridge' ] [ 'client' ]->loop ();
+		}
+		catch ( Mosquitto\Exception $m ) {
 			bridgeclient_connect ();
 		}
 
 		sleep ( 1 );
 	}
 
-	if ( $GLOBALS ['stop'] ) {
+	if ( $GLOBALS [ 'stop' ] ) {
 		continue;
 	}
 
-	if ( ! $GLOBALS ['now'] ) {
-		$GLOBALS ['synchro'] = INTERVAL * 60 + time ();
+	if ( !$GLOBALS [ 'now' ] ) {
+		$GLOBALS [ 'synchro' ] = INTERVAL * 60 + time ();
 	}
 
 	printf ( "\n===============  %s  ================= \n", strftime ( "%X" ) );
@@ -51,14 +52,14 @@ while ( ! $GLOBALS ['stop'] ) {
 
 	// Nacteni udaju
 	// Test, zda-li se maji aktualizovat nastaveni v hlavicich
-	foreach ( array_keys ( $GLOBALS ['heating'] ['radiators'] ) as $l_idx ) {
+	foreach ( array_keys ( $GLOBALS [ 'heating' ] [ 'radiators' ] ) as $l_idx ) {
 		unset ( $l_radiator );
-		$l_radiator = &$GLOBALS ['heating'] ['radiators'] [$l_idx];
+		$l_radiator = &$GLOBALS [ 'heating' ] [ 'radiators' ] [ $l_idx ];
 
-		echo $l_radiator ['mac'], '=', $l_radiator ['name'], "...";
+		echo $l_radiator [ 'mac' ], '=', $l_radiator [ 'name' ], "...";
 
 		unset ( $l_radiator_now );
-		$l_radiator_now = cometblue_receiveconf ( $l_radiator ['mac'], PIN );
+		$l_radiator_now = cometblue_receiveconf ( $l_radiator [ 'mac' ], PIN );
 		if ( $l_radiator_now === false ) {
 			echo "Error", PHP_EOL;
 			continue;
@@ -67,6 +68,15 @@ while ( ! $GLOBALS ['stop'] ) {
 
 		$l_correct = false;
 		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
+			if ( isset( $l_radiator_now[ $l_colname ][ 0 ][ 'from' ] ) ) {
+				echo "sorting",PHP_EOL;
+				usort ( $l_radiator_now[ $l_colname ], function ( $a, $b ): int {
+					return strcmp ( $a[ 'from' ], $b[ 'from' ] );
+				} );
+				usort ( $l_radiator[ $l_colname ], function ( $a, $b ): int {
+					return strcmp ( $a[ 'from' ], $b[ 'from' ] );
+				} );
+			}
 			if ( $l_radiator [$l_colname] != $l_radiator_now [$l_colname] ) {
 				echo "BAD value:" , $l_colname, PHP_EOL;
 				$l_correct = true;
@@ -76,22 +86,22 @@ while ( ! $GLOBALS ['stop'] ) {
 
 		// Prevezmi hodnoty pouze pokud to bylo nastaveni planovace korektni, jinak oprav
 		if (! $l_correct) {
-			$l_radiator ['required'] = $l_radiator_now ['required'];
-			$l_radiator ['current'] = $l_radiator_now ['current'];
-			$l_radiator ['lastdata'] = $l_radiator_now ['lastdata'];
-		}
+			$l_radiator [ 'required' ] = $l_radiator_now [ 'required' ];
+			$l_radiator [ 'current' ] = $l_radiator_now [ 'current' ];
+			$l_radiator [ 'lastdata' ] = $l_radiator_now [ 'lastdata' ];
 
-		// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
-		// Pokud nesedi, tak hlavici prenastav
-		if ( $l_radiator ['required'] > $l_radiator ['comfort'] ) {
-			echo "BAD value:", 'required', PHP_EOL;
-			$l_radiator ['required'] = $l_radiator ['comfort'];
-			$l_correct = true;
+			// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
+			// Pokud nesedi, tak hlavici prenastav
+			if ( $l_radiator [ 'required' ] > $l_radiator [ 'comfort' ] ) {
+				echo "BAD value:", 'required', PHP_EOL;
+				$l_radiator [ 'required' ] = $l_radiator [ 'comfort' ];
+				$l_correct = true;
+			}
 		}
 
 		// Odesli informace na MQTT
-		echo "Sending data ", $l_radiator ['name'];
-		bridge_publish ( 'radiator_actual/' . $l_radiator ['name'], $l_radiator );
+		echo "Sending data ", $l_radiator [ 'name' ];
+		bridge_publish ( 'radiator_actual/' . $l_radiator [ 'name' ], $l_radiator );
 		echo " OK", PHP_EOL;
 
 		if ( $l_correct ) {
