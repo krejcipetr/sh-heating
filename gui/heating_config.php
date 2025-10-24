@@ -318,9 +318,9 @@ switch ( $_SESSION ['mode'] ) {
 	case 1 :
 		// Z prniho radiatoru nacti dovolenou
 		echo '<div class="panel dovolena"><div class="label">Dovolená</div>';
-		echo '<input type="text" name="from" value="', $l_radiator ['dovolena'] ['from'], '">';
+		echo '<input type="text" name="from" value="', $l_radiator ['dovolena'] ['from'], ':00">';
 		echo '&nbsp;-&nbsp;';
-		echo '<input type="text" name="to" value="', $l_radiator ['dovolena'] ['to'], '">';
+		echo '<input type="text" name="to" value="', $l_radiator ['dovolena'] ['to'], ':00">';
 		echo '<input type="text" name="temp" value="', $l_radiator ['dovolena'] ['temp'], '">';
 		echo '<br>';
 		echo '<input type="submit" name="dovolena" value="Uložit">';

@@ -167,7 +167,7 @@ function dovolena_encode ( $a_definition ) {
 	return $l_data;
 }
 
-function cometblue_open ( $a_mac, $a_pin, $a_max_retries = 3 , $a_pins = 1) {
+function cometblue_open ( $a_mac, $a_pin, $a_max_retries = 3, $a_pins = 1 ) {
 	/* Nacteni ze zažízení */
 	ini_set ( "expect.timeout", 30 );
 	ini_set ( "expect.loguser", testing ? 1 : 0 );
@@ -387,7 +387,7 @@ function cometblue_receiveconf ( $a_mac, $a_pin ) {
 	$l_radiator [ 'window_detect' ] = array('sensivity' => ($l_teploty [ 5 ]), 'timer' => ($l_teploty [ 6 ]));
 
 // Info
-	$l_radiator [ 'battery' ] = hexdec ( $l_output[ CHARACTERISTIC_BATTERY[ 0 ] ] );
+	$l_radiator [ 'battery' ] = $l_output[ CHARACTERISTIC_BATTERY[ 0 ] ][ 0 ];
 	$l_radiator [ 'lastdata' ] = serialize ( $l_output );
 
 	return $l_radiator;
@@ -403,7 +403,7 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 
 	try {
 
-		list( $stream, $l_btdefs ) = cometblue_open ( $a_radiator[ 'mac' ], $a_pin, 3 ,2 );
+		list( $stream, $l_btdefs ) = cometblue_open ( $a_radiator[ 'mac' ], $a_pin, 3, 2 );
 
 		$l_settings = cometblue_receivevalue ( $stream, $l_btdefs, CHARACTERISTIC_SETTINGS[ 0 ] );
 
@@ -433,8 +433,8 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 		                                                  $l_offset, $a_radiator [ 'window_detect' ] [ 'sensivity' ], $a_radiator [ 'window_detect' ] [ 'timer' ]]];
 
 		// AUTO MODE ->MANUAL->AUTO
-		$l_output [] = [CHARACTERISTIC_SETTINGS[ 0 ], [($l_settings | 0x1), $l_settings[ 1 ], $l_settings[ 2 ]]];
-		$l_output [] = [CHARACTERISTIC_SETTINGS[ 0 ], [($l_settings & 0xfe), $l_settings[ 1 ], $l_settings[ 2 ]]];
+		$l_output [] = [CHARACTERISTIC_SETTINGS[ 0 ], [($l_settings[0] | 0x1), $l_settings[ 1 ], $l_settings[ 2 ]]];
+		$l_output [] = [CHARACTERISTIC_SETTINGS[ 0 ], [($l_settings[0] & 0xfe), $l_settings[ 1 ], $l_settings[ 2 ]]];
 
 		// Vlastni zapsani do zarizeni
 		foreach ( $l_output as $l_outdef ) {
