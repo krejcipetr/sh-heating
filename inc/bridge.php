@@ -164,15 +164,7 @@ function bridgeclient_message ( $message ) {
 			case 'config' :
 				fprintf ( STDOUT, "MQTT: Got configuration ... " );
 
-				array_walk( $l_config['radiators'], function (& $r) {
-					foreach (['pondeli','utery','streda','ctvrtek','patek','sobota','nedele'] as $x)
-						$r[$x] = array_filter($r[$x],
-							function ( $v ) {
-								return $v['from'] != '';
-							}
-						);
-				} );
-
+				array_walk ( $l_config ['radiators'], 'radiator_clean' );
 
 				$GLOBALS ['heating'] ['radiators'] =  $l_config ['radiators'];
 				$GLOBALS ['heating'] ['sources'] = $l_config ['sources'];
@@ -201,6 +193,9 @@ function bridgeclient_message ( $message ) {
 
 			case 'radiator_reconfigure' :
 				fprintf ( STDOUT, "MQTT: Reconfiguration of radiator [%s] ...", $l_casti [1] );
+				echo PHP_EOL;
+
+				radiator_clean ($l_config);
 
 				$l_radiator = &radiator_getbyname ( $l_casti [1] );
 				if ( $l_radiator === false ) {

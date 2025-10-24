@@ -6,4 +6,4 @@ require_once 'config.php';
 require_once 'inc/radiator.php';
 
 
-$l_radiator =  cometblue_receiveconf ( $argv[ 1 ] , PIN );
+var_export(cometblue_receiveconf ( $argv[ 1 ] , PIN ));
