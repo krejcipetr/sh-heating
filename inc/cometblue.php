@@ -453,14 +453,11 @@ function cometblue_sendconf ( $a_radiator, $a_pin ) {
 		// BIT_LOCKED = 0x80
 		// BIT_WINDOW = 0x10
 		$l_mode = hexdec ( $l_source [16] [0] );
-		if ( $a_radiator ['mode_manual'] ?? 0) {
-			$l_mode |= 0x01;
-		}
-		else {
-			$l_mode &= 254;
-		}
+		$l_mode &= 254;
 		// Zamcen neni
 		$l_output [] = sprintf ( "0x%02s 0x%02s 0x%02s", dechex ( $l_mode ), $l_source [16] [1], $l_source [16] [2] );
+
+
 
 		// Teploty
 		$l_offset = ($a_radiator ['offset'] < 0) ? (256 + 2 * $a_radiator ['offset']) : (2 * $a_radiator ['offset']);

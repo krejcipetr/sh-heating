@@ -66,10 +66,13 @@ while ( !$GLOBALS [ 'stop' ] ) {
 		}
 		echo "OK", PHP_EOL;
 
-		$l_correct = false;
-		foreach ( array ('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena' ) as $l_colname ) {
+		if ( testing ) {
+			var_export ( $l_radiator_now );
+		}
+
+		$l_bad = false;
+		foreach ( array('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena') as $l_colname ) {
 			if ( isset( $l_radiator_now[ $l_colname ][ 0 ][ 'from' ] ) ) {
-				echo "sorting",PHP_EOL;
 				usort ( $l_radiator_now[ $l_colname ], function ( $a, $b ): int {
 					return strcmp ( $a[ 'from' ], $b[ 'from' ] );
 				} );
@@ -77,26 +80,42 @@ while ( !$GLOBALS [ 'stop' ] ) {
 					return strcmp ( $a[ 'from' ], $b[ 'from' ] );
 				} );
 			}
-			if ( $l_radiator [$l_colname] != $l_radiator_now [$l_colname] ) {
-				echo "BAD value:" , $l_colname, PHP_EOL;
-				$l_correct = true;
-				break;
+			if ( $l_radiator [ $l_colname ] != $l_radiator_now [ $l_colname ] ) {
+				echo "BAD value:", $l_colname, PHP_EOL;
+				if ( testing ) {
+					var_export ( $l_radiator [ $l_colname ] );
+					var_export ( $l_radiator_now [ $l_colname ] );
+				}
+				$l_bad = true;
 			}
 		}
 
 		// Prevezmi hodnoty pouze pokud to bylo nastaveni planovace korektni, jinak oprav
-		if (! $l_correct) {
+		if ( !$l_bad ) {
 			$l_radiator [ 'required' ] = $l_radiator_now [ 'required' ];
 			$l_radiator [ 'current' ] = $l_radiator_now [ 'current' ];
 			$l_radiator [ 'lastdata' ] = $l_radiator_now [ 'lastdata' ];
 
-			// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max conforty, cas hlavice v rozmezi 1min
+			// Kontrola, zdali se nemenily pozadovanee nastaveni, tj. programovani, pozaovana teplota max comforty, cas hlavice v rozmezi 1min
 			// Pokud nesedi, tak hlavici prenastav
 			if ( $l_radiator [ 'required' ] > $l_radiator [ 'comfort' ] ) {
 				echo "BAD value:", 'required', PHP_EOL;
 				$l_radiator [ 'required' ] = $l_radiator [ 'comfort' ];
-				$l_correct = true;
+				$l_bad = true;
 			}
+		}
+		else {
+			// Urci required podle definice
+			$l_defindex = ['pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele'] [ intval ( date ( "w" ) ) ];
+			$l_daydef = $l_radiator[ $l_defindex ];
+			// Je cas v nejakem intervalu?
+			$l_cas = strftime ( "%H:%M" );
+			$l_platne = array_filter ( $l_daydef, function ( $l_daydef ) use ( $l_cas ) {
+				return $l_daydef[ 'from' ] <= $l_cas && $l_cas <= $l_daydef[ 'to' ];
+			} );
+			$l_requiredtemp = count ( $l_platne ) > 1 ? $l_radiator[ 'comfort' ] : $l_radiator[ 'night' ];
+			echo "Setting required to ", $l_requiredtemp, PHP_EOL;
+			$l_radiator [ 'required' ] = $l_requiredtemp;
 		}
 
 		// Odesli informace na MQTT
@@ -104,12 +123,13 @@ while ( !$GLOBALS [ 'stop' ] ) {
 		bridge_publish ( 'radiator_actual/' . $l_radiator [ 'name' ], $l_radiator );
 		echo " OK", PHP_EOL;
 
-		if ( $l_correct ) {
+		if ( $l_bad ) {
 			echo "Repairing ... ";
 			cometblue_sendconf ( $l_radiator, PIN );
 			echo "OK", PHP_EOL;
 		}
-		sleep(10);
+
+		sleep ( 10 );
 	}
 }
 
