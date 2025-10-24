@@ -164,7 +164,17 @@ function bridgeclient_message ( $message ) {
 			case 'config' :
 				fprintf ( STDOUT, "MQTT: Got configuration ... " );
 
-				$GLOBALS ['heating'] ['radiators'] = $l_config ['radiators'];
+				array_walk( $l_config['radiators'], function (& $r) {
+					foreach (['pondeli','utery','streda','ctvrtek','patek','sobota','nedele'] as $x)
+						$r[$x] = array_filter($r[$x],
+							function ( $v ) {
+								return $v['from'] != '';
+							}
+						);
+				} );
+
+
+				$GLOBALS ['heating'] ['radiators'] =  $l_config ['radiators'];
 				$GLOBALS ['heating'] ['sources'] = $l_config ['sources'];
 
 				foreach ( array_keys ( $GLOBALS ['heating'] ['sources'] ) as $l_idx ) {
