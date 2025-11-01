@@ -68,8 +68,12 @@ function radiator_clean ( &$l_radiator ) {
 	foreach ( ['pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele'] as $x ) {
 		$l_radiator[ $x ] = array_filter ( $l_radiator[ $x ],
 			function ( $v ) {
-				return $v[ 'from' ] != '';
+				return $v[ 'from' ] != '' && $v[ 'to' ] != '';
 			}
 		);
+		usort ( $l_radiator[ $x ], function ( $a, $b ): int {
+			return strcmp ( $a[ 'from' ], $b[ 'from' ] );
+		} );
 	}
+
 }

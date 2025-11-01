@@ -70,22 +70,14 @@ while ( !$GLOBALS [ 'stop' ] ) {
 			var_export ( $l_radiator_now );
 		}
 
+		radiator_clean ( $l_radiator_now );
+
 		$l_bad = false;
 		foreach ( array('comfort', 'night', 'offset', 'pondeli', 'utery', 'streda', 'ctvrtek', 'patek', 'sobota', 'nedele', 'dovolena') as $l_colname ) {
-			if ( isset( $l_radiator_now[ $l_colname ][ 0 ][ 'from' ] ) ) {
-				usort ( $l_radiator_now[ $l_colname ], function ( $a, $b ): int {
-					return strcmp ( $a[ 'from' ], $b[ 'from' ] );
-				} );
-				usort ( $l_radiator[ $l_colname ], function ( $a, $b ): int {
-					return strcmp ( $a[ 'from' ], $b[ 'from' ] );
-				} );
-			}
 			if ( $l_radiator [ $l_colname ] != $l_radiator_now [ $l_colname ] ) {
 				echo "BAD value:", $l_colname, PHP_EOL;
-				if ( testing ) {
-					var_export ( $l_radiator [ $l_colname ] );
-					var_export ( $l_radiator_now [ $l_colname ] );
-				}
+				var_export ( $l_radiator [ $l_colname ] );
+				var_export ( $l_radiator_now [ $l_colname ] );
 				$l_bad = true;
 			}
 		}
