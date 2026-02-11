@@ -110,9 +110,9 @@ while ( true ) {
 
 		// Urceni predchazejiciho stavu zdroje podle nastaveni zdroju
 		$l_heating_curr = false;
-		foreach ( $l_radiator ['poweredby'] as $l_idx ) {
+		foreach ( $l_radiator ['poweredby'] as $l_idx2 ) {
 			unset ( $l_source );
-			$l_source = & source_getbyname ( $l_idx );
+			$l_source = & source_getbyname ( $l_idx2 );
 			$l_heating_curr |= $l_source ['state'];
 		}
 
@@ -193,9 +193,9 @@ while ( true ) {
 
 		# urceni noveho stavu
 		$l_state = false;
-		foreach ( $l_source ['controledby'] as $l_idx ) {
+		foreach ( $l_source ['controledby'] as $l_idx2 ) {
 			unset ( $l_radiator );
-			$l_radiator = & radiator_getbyname ( $l_idx );
+			$l_radiator = & radiator_getbyname ( $l_idx2 );
 			$l_state |= $l_radiator ['control'] ['heating'];
 		}
 
@@ -253,4 +253,4 @@ while ( true ) {
 	printf ( PHP_EOL . PHP_EOL . $l_message_subjectreport );
 }
 
-bridge_disconnect ();
+//bridge_disconnect ();
